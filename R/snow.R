@@ -150,12 +150,25 @@ clusterEvalQ<-function(cl, expr)
     clusterCall(cl, eval, substitute(expr), env=.GlobalEnv)
 
 clusterExport <- function(cl, list) {
-    # do this with only one clusterCall--loop on slaves
+    # do this with only one clusterCall--loop on slaves?
+    gets <- function(n, v) { assign(n, v, env = .GlobalEnv); NULL }
     for (name in list) {
-        clusterCall(cl, function(n, v) assign(n, v, env = .GlobalEnv),
-                        name, get(name, env = .GlobalEnv))
+        clusterCall(cl, gets, name, get(name, env = .GlobalEnv))
     }
 }
+
+## A variant that does the exports one at at ime--this may be useful
+## when large objects are being sent
+# clusterExportSerial <- function(cl, list) {
+#     gets <- function(n, v) { assign(n, v, env = .GlobalEnv); NULL }
+#     for (name in list) {
+#         v <- get(name, env = .GlobalEnv)
+#         for (i in seq(along = cl)) {
+#             sendCall(cl[[i]], gets, list(name, v))
+#             recvResult(cl[[i]])
+#         }
+#     }
+# }
 
 recvOneResult <- function(cl) {
     v <- recvOneData(cl)
@@ -263,7 +276,7 @@ clusterSetupRNGstream <- function (cl, seed=rep(12345,6), ...) {
     nc <- length(cl)
     names <- as.character(1:nc)
     .lec.CreateStream(names)
-    states <- lapply(as.character(1:2), .lec.GetStateList)
+    states <- lapply(names, .lec.GetStateList)
     invisible(clusterApply(cl, states, initRNGstreamNode))
 }
 
