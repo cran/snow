@@ -24,8 +24,8 @@ getMPIcluster()
   \item{names}{character vector of node names}
   \item{options}{cluster options object}
   \item{cl}{cluster object}
-  \item{val}{new option value}
   \item{...}{cluster option specifications}
+  \item{type}{character; specifies cluster type.}
 }
 \description{
   Functions to start and stop a SNOW cluster and to set default cluster
@@ -84,4 +84,4 @@ cl <- makeCluster(c("localhost","localhost"), type = "SOCK")
 clusterApply(cl, 1:2, get("+"), 3)
   }
 }
-\keyword{internal}
+\keyword{programming}

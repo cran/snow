@@ -30,4 +30,4 @@ clusterSetupSPRNG(cl)
 clusterSetupSPRNG(cl, seed=1234)
   }
 }
-\keyword{internal}
+\keyword{programming}

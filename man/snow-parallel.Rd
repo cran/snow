@@ -18,8 +18,14 @@ parMM(cl, A, B)
   \item{cl}{cluster object}
   \item{fun}{function or character string naming a function}
   \item{X}{array to be used}
+  \item{x}{matrix to be used}
   \item{FUN}{function or character string naming a function}
   \item{MARGIN}{vector specifying the dimensions to use.}
+  \item{simplify}{logical; see \code{sapply}}
+  \item{USE.NAMES}{logical; see \code{sapply}}
+  \item{...}{additional arguments to pass to standard function}
+  \item{A}{matrix}
+  \item{B}{matrix}
 }
 \description{
   Parallel versions of \code{apply} and related functions.
@@ -44,4 +50,4 @@ cl <- makeSOCKcluster(c("localhost","localhost"))
 parSapply(cl, 1:20, get("+"), 3)
   }
 }
-\keyword{internal}
+\keyword{programming}

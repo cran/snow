@@ -20,6 +20,8 @@ clusterExport(cl, list)
   \item{expr}{expression to evaluate}
   \item{seq}{vector to split}
   \item{list}{character vector of variables to export}
+  \item{x}{array}
+  \item{...}{additional arguments to pass to standard function}
 }
 \description{
   Functions for computing on a SNOW cluster.
@@ -85,4 +87,4 @@ clusterCall(cl, function(y) x + y, 2)
 
   }
 }
-\keyword{internal}
+\keyword{programming}
