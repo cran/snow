@@ -71,6 +71,7 @@ initDefaultClusterOptions <- function() {
         homogeneous <- FALSE
     else homogeneous <- TRUE
     options <- list(port = 600011,
+                    timeout = 60 * 60 * 24 * 14, # two weeks
                     master =  Sys.info()["nodename"],
                     homogeneous = homogeneous,
                     type = NULL,
@@ -158,7 +159,7 @@ clusterExport <- function(cl, list) {
 
 recvOneResult <- function(cl) {
     v <- recvOneData(cl)
-    return(value = v$value$value, node=v$node)
+    list(value = v$value$value, node=v$node)
 }
 
 findRecvOneTag <- function(cl, anytag) {
@@ -180,7 +181,7 @@ clusterApplyLB <- function(cl, x, fun, ...) {
     fun <- fun # need to force the argument
     if (n > 0 && p > 0) {
         wrap <- function(x, i, ...)
-            return(value = try(fun(x, ...)), index = i)
+            list(value = try(fun(x, ...)), index = i)
         submit <- function(node, job) {
             args <- c(list(x[[job]]), list(job), list(...))
             sendCall(cl[[node]], wrap, args)
@@ -201,12 +202,31 @@ clusterApplyLB <- function(cl, x, fun, ...) {
 
 
 #
+# Cluster RNG Support
+#
+
+clusterSetupRNG <- function (cl, type="RNGstream", ...) {
+    RNGnames <- c("RNGstream", "SPRNG")
+    rng <- pmatch (type, RNGnames)
+    if (is.na(rng))
+        stop(paste("'", type,
+                   "' is not a valid choice. Choose 'RNGstream' or 'SPRNG'.",
+                   sep = ""))
+    type <- RNGnames[rng]
+    if (rng == 1)
+        clusterSetupRNGstream(cl, ...)
+    else clusterSetupSPRNG(cl, ...)
+    type
+}
+
+
+#
 # Cluster SPRNG Support 
 #
 # adapted from rpvm (Li & Rossini)
 
 clusterSetupSPRNG <- function (cl, seed = round(2^32 * runif(1)),
-                            prngkind = "default", para = 0) 
+                            prngkind = "default", para = 0, ...) 
 {
     if (!is.character(prngkind) || length(prngkind) > 1)
         stop("'rngkind' must be a character string of length 1.")
@@ -225,8 +245,50 @@ initSprngNode <- function (streamno, nstream, seed, kind, para)
     if (! require(rsprng))
         stop("the `rsprng' package is needed for SPRNG support.")
     .Call("r_init_sprng", as.integer(kind), as.integer(streamno), 
-        as.integer(nstream), as.integer(seed), as.integer(para))
+        as.integer(nstream), as.integer(seed), as.integer(para),
+        PACKAGE = "rsprng")
     RNGkind("user")
+}
+
+
+#
+# rlecuyer support
+#
+
+clusterSetupRNGstream <- function (cl, seed=rep(12345,6), ...) {
+    if (! require(rlecuyer))
+        stop("the `rlecuyer' package is needed for RNGstream support.")
+    .lec.init()
+    .lec.SetPackageSeed(seed)
+    nc <- length(cl)
+    names <- as.character(1:nc)
+    .lec.CreateStream(names)
+    states <- lapply(as.character(1:2), .lec.GetStateList)
+    invisible(clusterApply(cl, states, initRNGstreamNode))
+}
+
+initRNGstreamNode <- function (stream) {
+    if (! require(rlecuyer))
+        stop("the `rlecuyer' package is needed for RNGstream support.") 
+
+    if (length(.lec.Random.seed.table$name) > 0) {
+	rm(".lec.Random.seed.table", envir=.GlobalEnv)
+	assign(".lec.Random.seed.table", list(Cg=matrix(0,nrow=0,ncol=6),
+                                              Bg=matrix(0,nrow=0,ncol=6),
+                                              Ig=matrix(0,nrow=0,ncol=6),
+                                              AIP=matrix(0,nrow=0,ncol=2),
+                                              name=c()), envir=.GlobalEnv)
+    }
+    .lec.Random.seed.table$Cg <<- rbind(.lec.Random.seed.table$Cg,
+                                        stream$Cg[1:6])
+    .lec.Random.seed.table$Bg <<- rbind(.lec.Random.seed.table$Bg,stream$Bg)
+    .lec.Random.seed.table$Ig <<- rbind(.lec.Random.seed.table$Ig,stream$Ig)
+    .lec.Random.seed.table$AIP <<- rbind(.lec.Random.seed.table$AIP,
+                                         c(stream$Anti, stream$IncPrec))
+    .lec.Random.seed.table$name <<- c(.lec.Random.seed.table$name, stream$name)
+
+    old.kind<-.lec.CurrentStream(stream$name)
+    old.kind
 }
 
 

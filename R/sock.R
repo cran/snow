@@ -48,8 +48,29 @@ makeSOCKmaster <- function() {
 
 closeNode.SOCKnode <- function(node) close(node$con)
 
-sendData.SOCKnode <- function(node, data) serialize(data, node$con)
-recvData.SOCKnode <- function(node) unserialize(node$con)
+sendData.SOCKnode <- function(node, data) {
+    timeout <- getClusterOption("timeout")
+    old <- options(timeout = timeout);
+    on.exit(options(old))
+    serialize(data, node$con)
+}
+
+recvData.SOCKnode <- function(node) {
+    timeout <- getClusterOption("timeout")
+    old <- options(timeout = timeout);
+    on.exit(options(old))
+    unserialize(node$con)
+}
+
+recvOneData.SOCKcluster <- function(cl) {
+    socklist <- lapply(cl, function(x) x$con)
+    repeat {
+        ready <- socketSelect(socklist)
+        if (length(ready) > 0) break;
+    }
+    n <- which(ready)[1]  # may need rotation or some such for fairness
+    list(node = n, value = unserialize(socklist[[n]]))
+}
 
 makeSOCKcluster <- function(names, ..., options = defaultClusterOptions) {
     if (! exists("serialize") && ! require(serialize))
@@ -58,5 +79,6 @@ makeSOCKcluster <- function(names, ..., options = defaultClusterOptions) {
     cl <- vector("list",length(names))
     for (i in seq(along=cl))
         cl[[i]] <- newSOCKnode(names[[i]], options = options)
+    class(cl) <- c("SOCKcluster")
     cl
 }

@@ -25,10 +25,9 @@ processes may remain running and need to be shut down manually.
 
 			     INSTALLATION
 
-Socket clusters require the serialize package.  PVM clusters require
-PVM and the rpvm package.  MPI clusters require LAM-MPI and the Rmpi
-package, which also requires serialize.  The rsprng package may also
-be useful to support parallel random number generation.  These
+PVM clusters require PVM and the rpvm package.  MPI clusters require
+LAM-MPI and the Rmpi package.  The rsprng and/or rlecuyer packages may
+also be useful to support parallel random number generation.  These
 supporting R packages and the snow package should be installed in the
 same library directory.  The snow package and supporting packages need
 to be available on all hosts that are to be used for a cluster.
@@ -36,7 +35,7 @@ to be available on all hosts that are to be used for a cluster.
 No further configuration should be needed for a homogeneous network of
 workstations with a common architecture and common file system layout.
 If some hosts have different file system layouts, then the file
-RunSNowNode should be placed in a directory on the PATH of each host
+RunSnowNode should be placed in a directory on the PATH of each host
 to be used for slave processes, and each such host should define the
 variable R_SNOW_LIB as the directory in which the snow package and
 supporting packages have been installed.  Thus if snow has been

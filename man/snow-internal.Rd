@@ -34,6 +34,7 @@
 \alias{sendCall}
 \alias{recvResult}
 \alias{initSprngNode}
+\alias{initRNGstreamNode}
 \alias{splitIndices}
 \alias{splitList}
 \alias{splitRows}
@@ -44,6 +45,7 @@
 \alias{recvOneData}
 \alias{recvOneData.MPIcluster}
 \alias{recvOneData.PVMcluster}
+\alias{recvOneData.SOCKcluster}
 \alias{recvOneResult}
 \alias{getClusterOption}
 \usage{
@@ -88,6 +90,7 @@ sendCall(con, fun, args, return = TRUE)
 recvResult(con)
 
 initSprngNode(streamno, nstream, seed, kind, para) 
+initRNGstreamNode(stream)
 
 splitIndices(nx, ncl)
 splitList(x, ncl)
@@ -99,6 +102,7 @@ recvOneData(cl)
 recvOneResult(cl)
 recvOneData.MPIcluster(cl)
 recvOneData.PVMcluster(cl)
+recvOneData.SOCKcluster(cl)
 getClusterOption(name, options = defaultClusterOptions)
 }
 \description{
