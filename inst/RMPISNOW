@@ -1,0 +1,6 @@
+#! /bin/sh
+
+R_LIBS=${R_LIBS}:${R_SNOW_LIB}; export R_LIBS
+R_PROFILE=${R_SNOW_LIB}/snow/RMPISNOWprofile; export R_PROFILE
+
+R $*
