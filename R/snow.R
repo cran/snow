@@ -10,6 +10,9 @@ docall <- function(fun, args) {
     do.call("fun", lapply(args, enquote))
 }
 
+if (! exists("emptyenv"))
+    emptyenv <- function() NULL
+
 
 #
 # Slave Loop Function
@@ -82,7 +85,7 @@ initDefaultClusterOptions <- function() {
                     rlibs = Sys.getenv("R_LIBS"),
                     scriptdir = .path.package("snow"),
                     rprog = file.path(rhome, "bin", "R"))
-    defaultClusterOptions <<- addClusterOptions(NULL, options)
+    defaultClusterOptions <<- addClusterOptions(emptyenv(), options)
 }
 
 addClusterOptions <- function(options, new) {
