@@ -73,8 +73,6 @@ recvOneData.SOCKcluster <- function(cl) {
 }
 
 makeSOCKcluster <- function(names, ..., options = defaultClusterOptions) {
-    if (! exists("serialize") && ! require(serialize))
-        stop("the `serialize' package is needed for SOCK clusters.")
     options <- addClusterOptions(options, list(...))
     cl <- vector("list",length(names))
     for (i in seq(along=cl))
