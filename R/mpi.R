@@ -35,9 +35,15 @@ local({
 })
 
 makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
-    if (! is.null(getMPIcluster())) stop("MPI cluster already running")
     options <- addClusterOptions(options, list(...))
-    if (missing(count)) {
+    cl <- getMPIcluster()
+    if (! is.null(cl)) {
+        if (missing(count) || count == length(cl))
+             cl
+        else stop(sprintf("MPI cluster of size %d already running",
+                          length(cl)))
+    }
+    else if (missing(count)) {
         # assume something like mpirun -np count+1 has been used to start R
         count <- mpi.comm.size(0) - 1
         if (count <= 0)
@@ -45,7 +51,7 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
         cl <- vector("list",count)
         for (i in seq(along=cl))
             cl[[i]] <- newMPInode(i, 0)
-        class(cl) <- "MPIcluster"
+        class(cl) <- c("MPIcluster","cluster")
         setMPIcluster(cl)
         cl
     }
@@ -86,7 +92,7 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
         cl <- vector("list",count)
         for (i in seq(along=cl))
             cl[[i]] <- newMPInode(i, comm)
-        class(cl) <- c("spawnedMPIcluster",  "MPIcluster")
+        class(cl) <- c("spawnedMPIcluster",  "MPIcluster", "cluster")
         setMPIcluster(cl)
         cl
     }

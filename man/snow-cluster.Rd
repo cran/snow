@@ -6,6 +6,7 @@
 \alias{clusterApplyLB}
 \alias{clusterEvalQ}
 \alias{clusterExport}
+\alias{clusterMap}
 \usage{
 clusterSplit(cl, seq)
 clusterCall(cl, fun, ...)
@@ -13,6 +14,7 @@ clusterApply(cl, x, fun, ...)
 clusterApplyLB(cl, x, fun, ...)
 clusterEvalQ(cl, expr)
 clusterExport(cl, list)
+clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
 }
 \arguments{
   \item{cl}{cluster object}
@@ -22,6 +24,8 @@ clusterExport(cl, list)
   \item{list}{character vector of variables to export}
   \item{x}{array}
   \item{...}{additional arguments to pass to standard function}
+  \item{MoreArgs}{additional argument for \code{fun}}
+  \item{RECYCLE}{logical; if true shorter arguments are recycled}
 }
 \description{
   Functions for computing on a SNOW cluster.
@@ -59,6 +63,12 @@ clusterExport(cl, list)
   node that executes a particular job is nondeterministic, which can
   complicate ensuring reproducibility in simulations.
 
+  \code{clusterMap} is a multi-argument version of \code{clusterApply},
+  analogous to \code{mapply}.  If \code{RECYCLE} is true shorter
+  arguments are recycled; otherwise, the result length is the length of
+  the shortest argument.  The length of the longest argument must be 
+  less than or equal to the number of nodes in the cluster.
+  
   \code{clusterExport} assigns the global values on the master of the
   variables named in \code{list} to variables of the same names in the
   global environments of each node.

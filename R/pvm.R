@@ -64,6 +64,6 @@ makePVMcluster <- function(count, ..., options = defaultClusterOptions) {
     cl <- vector("list",count)
     for (i in seq(along=cl))
         cl[[i]] <- newPVMnode(options = options)
-    class(cl) <- c("PVMcluster")
+    class(cl) <- c("PVMcluster", "cluster")
     cl
 }

@@ -15,6 +15,22 @@ if (! exists("emptyenv"))
 
 
 #
+# Checking and subsetting
+#
+
+checkCluster <- function(cl) {
+    if (! inherits(cl, "cluster"))
+        stop("not a valid cluster");
+}    
+    
+"[.cluster" <-function(cl,...) {
+    v<-unclass(cl)[...]
+    class(v)<-class(cl)
+    v
+}
+
+
+#
 # Slave Loop Function
 #
 
@@ -73,7 +89,7 @@ initDefaultClusterOptions <- function() {
     if (Sys.getenv("R_SNOW_LIB") != "")
         homogeneous <- FALSE
     else homogeneous <- TRUE
-    options <- list(port = 600011,
+    options <- list(port = 10187,
                     timeout = 60 * 60 * 24 * 14, # two weeks
                     master =  Sys.info()["nodename"],
                     homogeneous = homogeneous,
@@ -135,19 +151,20 @@ sendCall <- function(con, fun, args, return = TRUE)
 recvResult <- function(con) recvData(con)$value
 
 clusterCall  <- function(cl, fun, ...) {
+    checkCluster(cl)
     for (i in seq(along = cl))
         sendCall(cl[[i]], fun, list(...))
     lapply(cl, recvResult)
 }
 
 clusterApply <- function(cl, x, fun, ...) {
+    checkCluster(cl)
     if (length(cl) < length(x))
-        stop("data lengh must be at most cluster size")
+        stop("data length must be at most cluster size")
     for (i in seq(along = x))
         sendCall(cl[[i]], fun, c(list(x[[i]]), list(...)))
     lapply(cl[seq(along=x)], recvResult)
 }
-
 
 clusterEvalQ<-function(cl, expr)
     clusterCall(cl, eval, substitute(expr), env=.GlobalEnv)
@@ -191,13 +208,18 @@ findRecvOneTag <- function(cl, anytag) {
     rtag
 }
 
+## this is separate to avoid capturing data in the closure
+clusterLBwrap <- function(fun) {
+    force(fun)
+    function(x, i, ...) list(value = try(fun(x, ...)), index = i)
+}
+
 clusterApplyLB <- function(cl, x, fun, ...) {
+    checkCluster(cl)
     n <- length(x)
     p <- length(cl)
-    fun <- fun # need to force the argument
     if (n > 0 && p > 0) {
-        wrap <- function(x, i, ...)
-            list(value = try(fun(x, ...)), index = i)
+        wrap <- clusterLBwrap(fun)
         submit <- function(node, job) {
             args <- c(list(x[[job]]), list(job), list(...))
             sendCall(cl[[node]], wrap, args)
@@ -213,6 +235,36 @@ clusterApplyLB <- function(cl, x, fun, ...) {
             val[d$value$index] <- list(d$value$value)
         }
         val
+    }
+}
+
+## **** should this just be done in terms of clusterApply?
+## **** should this allow load balancing?
+## **** disallow recycling if one arg is length zero?
+clusterMap <- function(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE) {
+    checkCluster(cl)
+    args <- list(...)
+    if (length(args) == 0)
+        stop("need at least one argument")
+    n <- sapply(args, length)
+    if (any(length(cl) < n))
+        stop("data lengths must be at most cluster size")
+    if (RECYCLE) {
+        vlen <- max(n)
+        if (! all(n == vlen))
+            ## expand all arguments -- inefficient but simple
+            for (i in 1:length(args))
+                args[[i]] <- rep(args[[i]], length = max(n))
+    }
+    else vlen = min(n)
+    if (vlen == 0)
+        NULL
+    else {
+        for (i in 1:vlen) {
+            nodeargs <- c(lapply(args, function(x) x[[i]]), MoreArgs)
+            sendCall(cl[[i]], fun, nodeargs)
+        }
+        lapply(cl[1:vlen], recvResult)
     }
 }
 
@@ -320,7 +372,8 @@ splitIndices <- function(nx, ncl) {
 
 splitIndices <- function(nx, ncl) {
     i <- 1:nx;
-    structure(split(i, cut(i, ncl)), names=NULL)
+    if (ncl == 1) i
+    else structure(split(i, cut(i, ncl)), names=NULL)
 }
 
 clusterSplit <- function(cl, seq)
@@ -454,7 +507,9 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
 .First.lib <- function(libname, pkgname) {
     if (is.null(defaultClusterOptions)) {
 	initDefaultClusterOptions()
-        if (length(.find.package("rpvm", quiet = TRUE)) != 0)
+        if (length(find("mpi.comm.size")) != 0)
+            type <- "MPI"
+        else if (length(.find.package("rpvm", quiet = TRUE)) != 0)
             type <- "PVM"
         else if (length(.find.package("Rmpi", quiet = TRUE)) != 0)
             type <- "MPI"

@@ -49,15 +49,16 @@ getMPIcluster()
   values for default cluster options.  There are many options.  The
   most useful ones are \code{type} and \code{homogeneous}.  The
   default value of the \code{type} option is currently set to
-  \code{"PVM"} if the \code{rpvm} package is available; otherwise, it
-  is set to \code{"MPI"} if \code{Rmpi} is available, and it is set to
+  "MPI" if \pkg{Rmpi} is on the search path.  Otherwise it is set to
+  \code{"PVM"} if the \pkg{rpvm} package is available, to \code{"MPI"}
+  if \pkg{Rmpi} is available but \pkg{rpvm} is not, and to
   \code{"SOCK"} if neither of these packages is found.
 
   The \code{homogeneous} option should be set to \code{FALSE} to
   specify that the startup procedure for inhomogeneous clusters is to
   be used; this requires some additional configuration. The default
   setting is \code{TRUE} unless the environment variable
-  \code{R_HOME_LIB} is defined on the master host with a non-empty
+  \code{R_SNOW_LIB} is defined on the master host with a non-empty
   value.
 
   The option\code{outfile} can be used to specify the file to which
@@ -72,7 +73,11 @@ getMPIcluster()
   In MPI configurations where process spawning is not available and
   something like \code{mpirun} is used to start a master and a set of slaves
   the corresponding cluster will have been pre-constructed and can be obtained
-  with \code{getMPIcluster}.  This interface is still experimental and
+  with \code{getMPIcluster}.  It is also possible to obtain a reference
+  to the running cluster using \code{makeCluster} or
+  \code{makeMPIcluster}.  In this case the \code{count} argument can be
+  omitted; if it is supplied, it must equal the number of nodes in the
+  cluster.  This interface is still experimental and
   subject to change.
 
   For more details see

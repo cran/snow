@@ -2,9 +2,9 @@
 
 The snow package provides support for simple parallel computing on a
 network of workstations using R.  A master R process calls makeCluster
-to start a cluster of slave processes; the master process then uses
+to start a cluster of worker processes; the master process then uses
 functions such as clusterCall and clusterApply to execute R code on
-the slave processes and collect and return the results on the master.
+the worker processes and collect and return the results on the master.
 This framework supports many forms of "embarrassingly parallel"
 computations.
 
@@ -36,7 +36,7 @@ No further configuration should be needed for a homogeneous network of
 workstations with a common architecture and common file system layout.
 If some hosts have different file system layouts, then the file
 RunSnowNode should be placed in a directory on the PATH of each host
-to be used for slave processes, and each such host should define the
+to be used for worker processes, and each such host should define the
 variable R_SNOW_LIB as the directory in which the snow package and
 supporting packages have been installed.  Thus if snow has been
 installed with
@@ -48,17 +48,17 @@ then users with a csh shell would place something like
 	setenv R_SNOW_LIB $HOME/SNOW/R/lib
 
 in their .cshrc files.  Setting this variable to a nonempty value on
-the master as well insures that the cluster startup mechanism assumes
+the master as well ensures that the cluster startup mechanism assumes
 an inhomogeneous cluster by default.  R should also be on the PATH of
-the hosts used to run slave processes (alternatively, you can edit the
+the hosts used to run worker processes (alternatively, you can edit the
 RunSnowNode scripts to use a fully qualified path to the R shell
 script).
 
-To date, snow has been used successfully with master and slaves running
+To date, snow has been used successfully with master and workers running
 on combinations of several flavors of Unix-like operating systems,
 including Linux, HP-UX and Mac OS X using PVM, LAM-MPI, or sockets.
 The socket version of snow has also been run with a master on Windows
-and slaves on Linux.  Reports on further experiences with Windows
+and workers on Linux.  Reports on further experiences with Windows
 systems would be welcome.
 
 

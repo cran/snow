@@ -33,6 +33,10 @@ newSOCKnode <- function(machine = "localhost", ...,
         env <- paste(env, " R_LIBS=", rlibs, sep="")
 
     system(paste(rshcmd, "-l", user, machine, "env", env, script))
+    ## need timeout here because of the way internals work
+    timeout <- getClusterOption("timeout")
+    old <- options(timeout = timeout);
+    on.exit(options(old))
     con <- socketConnection(port = port, server=TRUE, blocking=TRUE,
                             open="a+b")
     structure(list(con = con, host = machine), class = "SOCKnode")
@@ -41,7 +45,11 @@ newSOCKnode <- function(machine = "localhost", ...,
 makeSOCKmaster <- function() {
     master <- Sys.getenv("MASTER")
     port <- as.integer(Sys.getenv("PORT"))
-    # maybe use `try' and slep/retry if first time fails?
+    ## maybe use `try' and sleep/retry if first time fails?
+    ## need timeout here because of the way internals work
+    timeout <- getClusterOption("timeout")
+    old <- options(timeout = timeout);
+    on.exit(options(old))
     con <- socketConnection(master, port = port, blocking=TRUE, open="a+b")
     structure(list(con = con), class = "SOCKnode")
 }
@@ -49,16 +57,16 @@ makeSOCKmaster <- function() {
 closeNode.SOCKnode <- function(node) close(node$con)
 
 sendData.SOCKnode <- function(node, data) {
-    timeout <- getClusterOption("timeout")
-    old <- options(timeout = timeout);
-    on.exit(options(old))
+##     timeout <- getClusterOption("timeout")
+##     old <- options(timeout = timeout);
+##     on.exit(options(old))
     serialize(data, node$con)
 }
 
 recvData.SOCKnode <- function(node) {
-    timeout <- getClusterOption("timeout")
-    old <- options(timeout = timeout);
-    on.exit(options(old))
+##     timeout <- getClusterOption("timeout")
+##     old <- options(timeout = timeout);
+##     on.exit(options(old))
     unserialize(node$con)
 }
 
@@ -77,6 +85,6 @@ makeSOCKcluster <- function(names, ..., options = defaultClusterOptions) {
     cl <- vector("list",length(names))
     for (i in seq(along=cl))
         cl[[i]] <- newSOCKnode(names[[i]], options = options)
-    class(cl) <- c("SOCKcluster")
+    class(cl) <- c("SOCKcluster", "cluster")
     cl
 }

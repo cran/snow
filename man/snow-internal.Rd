@@ -48,6 +48,9 @@
 \alias{recvOneData.SOCKcluster}
 \alias{recvOneResult}
 \alias{getClusterOption}
+\alias{clusterLBwrap}
+\alias{checkCluster}
+\alias{[.cluster}
 \usage{
 stopCluster.default(cl)
 stopCluster.MPIcluster(cl)
@@ -104,6 +107,10 @@ recvOneData.MPIcluster(cl)
 recvOneData.PVMcluster(cl)
 recvOneData.SOCKcluster(cl)
 getClusterOption(name, options = defaultClusterOptions)
+
+clusterLBwrap(fun)
+checkCluster(cl)
+\method{[}{cluster}(cl, ...)
 }
 \description{
   Internal functions for the snow package.
