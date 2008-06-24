@@ -32,10 +32,10 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
 }
 \details{
   These are the basic functions for computing on a cluster.  All
-  evaluations on the slave nodes are done using \code{try}.  Currently
-  the result lists returned by the cluster computing functions can a
-  combination of proper results and \code{try} error objects.  More
-  sophisticated approaches will be considered in the future.
+  evaluations on the slave nodes are done using \code{tryCatch}.
+  Currently an error is signaled on the master if any one of the nodes
+  produces an error.  More sophisticated approaches will be considered
+  in the future.
 
   \code{clusterCall} calls a function \code{fun} with identical arguments 
   \code{...} on each node in the cluster \code{cl} and returns a list
@@ -45,12 +45,12 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   It a cluster version of \code{evalq}, and is a convenience function
   defined in terms of \code{clusterCall}.
 
-  \code{clusterApply} calls \code{fun} on the first cluster node 
-  with arguments \code{seq[[1]]} and \code{...}, on the second node with
-  \code{seq[[2]]} and \code{...}, and so on.  The length of \code{seq}
-  must be less than or equal to the number of nodes in the cluster.
-  A list of the results is returned; the length of the result list
-  will equal the length of \code{seq}.
+  \code{clusterApply} calls \code{fun} on the first cluster node with
+  arguments \code{seq[[1]]} and \code{...}, on the second node with
+  \code{seq[[2]]} and \code{...}, and so on.  If the length of
+  \code{seq} is greater than the number of nodes in the cluster then
+  cluster nodes are reqycled. A list of the results is returned; the
+  length of the result list will equal the length of \code{seq}.
 
   \code{clusterApplyLB} is a load balancing version of \code{clusterApply}.
   if the length \code{p} of \code{seq} is greater than the number of
@@ -66,8 +66,8 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   \code{clusterMap} is a multi-argument version of \code{clusterApply},
   analogous to \code{mapply}.  If \code{RECYCLE} is true shorter
   arguments are recycled; otherwise, the result length is the length of
-  the shortest argument.  The length of the longest argument must be 
-  less than or equal to the number of nodes in the cluster.
+  the shortest argument.  Cluster nodes are recycled if the length of
+  the result is greater than the number of nodes.
   
   \code{clusterExport} assigns the global values on the master of the
   variables named in \code{list} to variables of the same names in the
@@ -76,7 +76,7 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   \code{clusterSplit} splits \code{seq} into one consecutive piece for
   each cluster and returns the result as a list with length equal to the
   number of cluster nodes.  Currently the pieces are chosen to be close
-  to equal in length.  Future releases will attempt to use relative
+  to equal in length.  Future releases may attempt to use relative
   performance information about nodes to choose split proportional to
   performance.
 

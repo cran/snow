@@ -8,13 +8,15 @@ the worker processes and collect and return the results on the master.
 This framework supports many forms of "embarrassingly parallel"
 computations.
 
-Snow can use one of three communications mechanisms: sockets, PVM, or
-MPI.  PVM clusters use the rpvm package; MPI clusters use package
-Rmpi.  If pvm is used, then pvm must be started, either using a pvm
-console (e.g the pvm text console or the graphical xpvm console, both
-available with pvm) or from R using functions provided by rpvm.
-Similarly, LAM-MPI must be started, e.g. using lamboot, for MPI
-clusters that use Rmpi and LAM-MPI.
+Snow can use one of four communications mechanisms: sockets, PVM, MPI,
+or NetWorkSpaces (NWS).  NWS support was provided by Steve Weston.
+PVM clusters use the rpvm package; MPI clusters use package Rmpi; NWS
+clusters use package nws.  If pvm is used, then pvm must be started,
+either using a pvm console (e.g the pvm text console or the graphical
+xpvm console, both available with pvm) or from R using functions
+provided by rpvm.  Similarly, LAM-MPI must be started, e.g.  using
+lamboot, for MPI clusters that use Rmpi and LAM-MPI.  If NWS is used,
+the NetWorkSpaces server must be running.
 
 
 			       CAUTION
@@ -26,11 +28,14 @@ processes may remain running and need to be shut down manually.
 			     INSTALLATION
 
 PVM clusters require PVM and the rpvm package.  MPI clusters require
-LAM-MPI and the Rmpi package.  The rsprng and/or rlecuyer packages may
-also be useful to support parallel random number generation.  These
-supporting R packages and the snow package should be installed in the
-same library directory.  The snow package and supporting packages need
-to be available on all hosts that are to be used for a cluster.
+LAM-MPI and the Rmpi package.  NWS clusters require the NetWorkSpaces
+server (a Python application) on one network accessible machine, and
+the nws package on all hosts used for a cluster.  The rsprng and/or
+rlecuyer packages may also be useful to support parallel random number
+generation.  These supporting R packages and the snow package should
+be installed in the same library directory.  The snow package and
+supporting packages need to be available on all hosts that are to be
+used for a cluster.
 
 No further configuration should be needed for a homogeneous network of
 workstations with a common architecture and common file system layout.
@@ -50,16 +55,16 @@ then users with a csh shell would place something like
 in their .cshrc files.  Setting this variable to a nonempty value on
 the master as well ensures that the cluster startup mechanism assumes
 an inhomogeneous cluster by default.  R should also be on the PATH of
-the hosts used to run worker processes (alternatively, you can edit the
-RunSnowNode scripts to use a fully qualified path to the R shell
+the hosts used to run worker processes (alternatively, you can edit
+the RunSnowNode scripts to use a fully qualified path to the R shell
 script).
 
-To date, snow has been used successfully with master and workers running
-on combinations of several flavors of Unix-like operating systems,
-including Linux, HP-UX and Mac OS X using PVM, LAM-MPI, or sockets.
-The socket version of snow has also been run with a master on Windows
-and workers on Linux.  Reports on further experiences with Windows
-systems would be welcome.
+To date, snow has been used successfully with master and workers
+running on combinations of several flavors of Unix-like operating
+systems, including Linux, HP-UX and Mac OS X using PVM, LAM-MPI, or
+sockets.  The socket version of snow has also been run with a master
+on Windows and workers on Linux.  Reports on further experiences with
+Windows systems would be welcome.
 
 
 			      REFERENCE

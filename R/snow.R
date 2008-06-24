@@ -44,9 +44,21 @@ slaveLoop <- function(master) {
             break;
         }
         else if (msg$type == "EXEC") {
-            value <- try(docall(msg$data$fun, msg$data$args))
-            #**** use exception= if failure?
-            value <- list(type = "VALUE", value = value, tag = msg$data$tag)
+            success <- TRUE
+            ## This uses the message, rather than the exception since
+            ## the exception class/methods may not be available on the
+            ## master.
+            handler <- function(e) {
+                success <<- FALSE
+                structure(conditionMessage(e),
+                          class=c("snow-try-error","try-error"))
+            }
+            t1 <- proc.time()
+            value <- tryCatch(docall(msg$data$fun, msg$data$args),
+                              error = handler)
+            t2 <- proc.time()
+            value <- list(type = "VALUE", value = value, success = success,
+                          time = t2 - t1, tag = msg$data$tag)
             sendData(master, value)
         }
     }
@@ -64,7 +76,7 @@ sendData <- function(node, data) UseMethod("sendData")
 recvData <- function(node) UseMethod("recvData")
 
 postNode <- function(con, type, value = NULL, tag = NULL) {
-    sendData(con, list(type = type, data = value, tag = NULL))
+    sendData(con, list(type = type, data = value, tag = tag))
 }
 
 stopNode <- function(n) {
@@ -131,6 +143,7 @@ makeCluster <- function(spec, type = getClusterOption("type"), ...) {
         SOCK = makeSOCKcluster(spec, ...),
         PVM = makePVMcluster(spec, ...),
         MPI = makeMPIcluster(spec, ...),
+        NWS = makeNWScluster(spec, ...),
         stop("unknown cluster type"))
 }
 
@@ -144,38 +157,71 @@ stopCluster.default <- function(cl)
 # Cluster Functions
 #
 
-sendCall <- function(con, fun, args, return = TRUE)
+sendCall <- function(con, fun, args, return = TRUE, tag = NULL)
     #**** mark node as in-call
-    postNode(con, "EXEC", list(fun = fun, args = args, return = return))
+    postNode(con, "EXEC", list(fun = fun, args = args, return = return,
+                               tag = tag))
 
 recvResult <- function(con) recvData(con)$value
 
+checkForRemoteErrors <- function(val) {
+    count <- 0
+    firstmsg <- NULL
+    for (v in val) {
+        if (inherits(v, "try-error")) {
+            count <- count + 1
+            if (count == 1) firstmsg <- v
+        }
+    }
+    if (count == 1)
+        stop("one node produced an error: ", firstmsg)
+    else if (count > 1)
+        stop(count, " nodes produced errors; first error: ", firstmsg)
+    val
+}
+            
 clusterCall  <- function(cl, fun, ...) {
     checkCluster(cl)
     for (i in seq(along = cl))
         sendCall(cl[[i]], fun, list(...))
-    lapply(cl, recvResult)
+    checkForRemoteErrors(lapply(cl, recvResult))
+}
+
+staticClusterApply <- function(cl, fun, n, argfun) {
+    checkCluster(cl)
+    p <- length(cl)
+    if (n > 0 && p > 0) {
+        val <- vector("list", n)
+        start <- 1
+        while (start <= n) {
+            end <- min(n, start + p - 1)
+	    jobs <- end - start + 1
+            for (i in 1:jobs) 
+                sendCall(cl[[i]], fun, argfun(start + i - 1))
+            val[start:end] <- lapply(cl[1:jobs], recvResult)
+            start <- start + jobs
+        }
+        checkForRemoteErrors(val)
+    }
 }
 
 clusterApply <- function(cl, x, fun, ...) {
-    checkCluster(cl)
-    if (length(cl) < length(x))
-        stop("data length must be at most cluster size")
-    for (i in seq(along = x))
-        sendCall(cl[[i]], fun, c(list(x[[i]]), list(...)))
-    lapply(cl[seq(along=x)], recvResult)
+    argfun <- function(i) c(list(x[[i]]), list(...))
+    staticClusterApply(cl, fun, length(x), argfun)
 }
 
 clusterEvalQ<-function(cl, expr)
     clusterCall(cl, eval, substitute(expr), env=.GlobalEnv)
 
-clusterExport <- function(cl, list) {
-    # do this with only one clusterCall--loop on slaves?
+clusterExport <- local({
     gets <- function(n, v) { assign(n, v, env = .GlobalEnv); NULL }
-    for (name in list) {
-        clusterCall(cl, gets, name, get(name, env = .GlobalEnv))
+    function(cl, list) {
+        ## do this with only one clusterCall--loop on slaves?
+        for (name in list) {
+            clusterCall(cl, gets, name, get(name, env = .GlobalEnv))
+        }
     }
-}
+})
 
 ## A variant that does the exports one at at ime--this may be useful
 ## when large objects are being sent
@@ -192,7 +238,7 @@ clusterExport <- function(cl, list) {
 
 recvOneResult <- function(cl) {
     v <- recvOneData(cl)
-    list(value = v$value$value, node=v$node)
+    list(value = v$value$value, node = v$node, tag = v$value$tag)
 }
 
 findRecvOneTag <- function(cl, anytag) {
@@ -208,64 +254,48 @@ findRecvOneTag <- function(cl, anytag) {
     rtag
 }
 
-## this is separate to avoid capturing data in the closure
-clusterLBwrap <- function(fun) {
-    force(fun)
-    function(x, i, ...) list(value = try(fun(x, ...)), index = i)
-}
-
-clusterApplyLB <- function(cl, x, fun, ...) {
+dynamicClusterApply <- function(cl, fun, n, argfun) {
     checkCluster(cl)
-    n <- length(x)
     p <- length(cl)
     if (n > 0 && p > 0) {
-        wrap <- clusterLBwrap(fun)
-        submit <- function(node, job) {
-            args <- c(list(x[[job]]), list(job), list(...))
-            sendCall(cl[[node]], wrap, args)
-        }
+        submit <- function(node, job)
+            sendCall(cl[[node]], fun, argfun(job), tag = job)
         for (i in 1 : min(n, p))
             submit(i, i)
-        val <- vector("list", length(x))
-        for (i in seq(along = x)) {
+        val <- vector("list", n)
+        for (i in 1:n) {
             d <- recvOneResult(cl)
             j <- i + min(n, p)
             if (j <= n)
                 submit(d$node, j)
-            val[d$value$index] <- list(d$value$value)
+            val[d$tag] <- list(d$value)
         }
-        val
+        checkForRemoteErrors(val)
     }
 }
 
-## **** should this just be done in terms of clusterApply?
+clusterApplyLB <- function(cl, x, fun, ...) {
+    argfun <- function(i) c(list(x[[i]]), list(...))
+    dynamicClusterApply(cl, fun, length(x), argfun)
+}
+
 ## **** should this allow load balancing?
 ## **** disallow recycling if one arg is length zero?
-clusterMap <- function(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE) {
+clusterMap <- function (cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE) {
     checkCluster(cl)
     args <- list(...)
-    if (length(args) == 0)
+    if (length(args) == 0) 
         stop("need at least one argument")
     n <- sapply(args, length)
-    if (any(length(cl) < n))
-        stop("data lengths must be at most cluster size")
     if (RECYCLE) {
         vlen <- max(n)
-        if (! all(n == vlen))
-            ## expand all arguments -- inefficient but simple
-            for (i in 1:length(args))
-                args[[i]] <- rep(args[[i]], length = max(n))
+        if (!all(n == vlen)) 
+            for (i in 1:length(args)) args[[i]] <- rep(args[[i]], 
+                length = max(n))
     }
     else vlen = min(n)
-    if (vlen == 0)
-        NULL
-    else {
-        for (i in 1:vlen) {
-            nodeargs <- c(lapply(args, function(x) x[[i]]), MoreArgs)
-            sendCall(cl[[i]], fun, nodeargs)
-        }
-        lapply(cl[1:vlen], recvResult)
-    }
+    argfun <- function(i) c(lapply(args, function(x) x[[i]]), MoreArgs)
+    staticClusterApply(cl, fun, vlen, argfun)
 }
 
 
@@ -383,10 +413,10 @@ splitList <- function(x, ncl)
     lapply(splitIndices(length(x), ncl), function(i) x[i])
 
 splitRows <- function(x, ncl)
-    lapply(splitIndices(nrow(x), ncl), function(i) x[i,, drop=F])
+    lapply(splitIndices(nrow(x), ncl), function(i) x[i,, drop=FALSE])
 
 splitCols <- function(x, ncl)
-    lapply(splitIndices(ncol(x), ncl), function(i) x[,i, drop=F])
+    lapply(splitIndices(ncol(x), ncl), function(i) x[,i, drop=FALSE])
 
 parLapply <- function(cl, x, fun, ...)
     docall(c, clusterApply(cl, splitList(x, length(cl)), lapply, fun, ...))
@@ -467,11 +497,11 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
     dim(newX) <- c(prod(d.call), d2)
     if(length(d.call) < 2) {# vector
         if (length(dn.call)) dimnames(newX) <- c(dn.call, list(NULL))
-        ans <- parLapply(cl, 1:d2, function(i) FUN(newX[,i], ...))
+        arglist <- lapply(1:d2, function(i) newX[,i])
     } else
-        ans <- parLapply(cl, 1:d2,
-            function(i) FUN(array(newX[,i], d.call, dn.call), ...))
-
+        arglist <- lapply(1:d2, function(i) array(newX[,i], d.call, dn.call))
+    ans <- parLapply(cl, arglist, FUN, ...)
+    
     ## answer dims and dimnames
 
     ans.list <- is.recursive(ans[[1]])
@@ -513,6 +543,8 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
             type <- "PVM"
         else if (length(.find.package("Rmpi", quiet = TRUE)) != 0)
             type <- "MPI"
+        else if (length(.find.package("nws", quiet = TRUE)) != 0)
+            type <- "NWS"
         else type <- "SOCK"
         setDefaultClusterOptions(type = type)
     }

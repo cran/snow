@@ -5,6 +5,7 @@
 \alias{stopCluster.default}
 \alias{stopCluster.MPIcluster}
 \alias{stopCluster.spawnedMPIcluster}
+\alias{stopCluster.NWScluster}
 \alias{defaultClusterOptions}
 \alias{enquote}
 \alias{docall}
@@ -24,6 +25,11 @@
 \alias{closeNode.MPInode}
 \alias{sendData.MPInode}
 \alias{recvData.MPInode}
+\alias{newNWSnode}
+\alias{makeNWSmaster}
+\alias{closeNode.NWSnode}
+\alias{sendData.NWSnode}
+\alias{recvData.NWSnode}
 \alias{closeNode}
 \alias{closeNode.default}
 \alias{sendData}
@@ -46,15 +52,19 @@
 \alias{recvOneData.MPIcluster}
 \alias{recvOneData.PVMcluster}
 \alias{recvOneData.SOCKcluster}
+\alias{recvOneData.NWScluster}
 \alias{recvOneResult}
 \alias{getClusterOption}
-\alias{clusterLBwrap}
 \alias{checkCluster}
+\alias{checkForRemoteErrors}
+\alias{staticClusterApply}
+\alias{dynamicClusterApply}
 \alias{[.cluster}
 \usage{
-stopCluster.default(cl)
-stopCluster.MPIcluster(cl)
-stopCluster.spawnedMPIcluster(cl)
+\method{stopCluster}{default}(cl)
+\method{stopCluster}{MPIcluster}(cl)
+\method{stopCluster}{spawnedMPIcluster}(cl)
+\method{stopCluster}{NWScluster}(cl)
 defaultClusterOptions
 addClusterOptions(options, new)
 initDefaultClusterOptions()
@@ -65,31 +75,31 @@ slaveLoop(master)
 
 newSOCKnode(machine = "localhost", ..., options = defaultClusterOptions)
 makeSOCKmaster()
-closeNode.SOCKnode(node)
-sendData.SOCKnode(node, data)
-recvData.SOCKnode(node)
+\method{closeNode}{SOCKnode}(node)
+\method{sendData}{SOCKnode}(node, data)
+\method{recvData}{SOCKnode}(node)
 
 newPVMnode(where = "", options = defaultClusterOptions)
 makePVMmaster()
-sendData.PVMnode(node, data)
-recvData.PVMnode(node)
+\method{sendData}{PVMnode}(node, data)
+\method{recvData}{PVMnode}(node)
 
 setMPIcluster(new)
 runMPIslave()
 newMPInode(rank, comm)
 makeMPImaster(comm)
-sendData.MPInode(node, data)
-recvData.MPInode(node)
+\method{sendData}{MPInode}(node, data)
+\method{recvData}{MPInode}(node)
 
 closeNode(node)
-closeNode.default(node)
+\method{closeNode}{default}(node)
 sendData(node, data)
 recvData(node)
 
 postNode(con, type, value = NULL, tag = NULL)
 stopNode(n)
 
-sendCall(con, fun, args, return = TRUE)
+sendCall(con, fun, args, return = TRUE, tag = NULL)
 recvResult(con)
 
 initSprngNode(streamno, nstream, seed, kind, para) 
@@ -103,13 +113,16 @@ splitCols(x, ncl)
 findRecvOneTag(cl, anytag)
 recvOneData(cl)
 recvOneResult(cl)
-recvOneData.MPIcluster(cl)
-recvOneData.PVMcluster(cl)
-recvOneData.SOCKcluster(cl)
+\method{recvOneData}{MPIcluster}(cl)
+\method{recvOneData}{PVMcluster}(cl)
+\method{recvOneData}{SOCKcluster}(cl)
+\method{recvOneData}{NWScluster}(cl)
 getClusterOption(name, options = defaultClusterOptions)
 
-clusterLBwrap(fun)
 checkCluster(cl)
+checkForRemoteErrors(val)
+staticClusterApply(cl, fun, n, argfun)
+dynamicClusterApply(cl, fun, n, argfun)
 \method{[}{cluster}(cl, ...)
 }
 \description{

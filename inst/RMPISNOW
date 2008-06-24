@@ -15,15 +15,23 @@ R_PROFILE=${snowdir}/snow/RMPISNOWprofile; export R_PROFILE
 if test ! -z "${LAMRANK}" ; then
     # use the LAMRANK environment variable set by LAM-MPI's mpirun to
     # run R with appropriate arguments for master and workers.
-    if test "${LAMRANK}" == "0" ; then
+    if test "${LAMRANK}" -eq 0 ; then
 	exec R $*
     else
 	exec R --slave > /dev/null 2>&1
     fi
+elif test ! -z "${OMPI_MCA_ns_nds_vpid}" ; then
+    # Similar approach for OpenMPI using the OMPI_MCA_ns_nds_vpid
+    # variable.  Don't know if it might be better to use
+    # OMPI_MCA_ns_nds_vpid_start instead.  The master R process thinks
+    # it is non-interactive so for now --no-save or something like
+    # that is needed.
+    if test "${OMPI_MCA_ns_nds_vpid}" -eq 0 ; then
+	exec R --no-save $*
+    else
+	exec R --slave > /dev/null 2>&1
+    fi
 else 
-    # It should be possible to do something similar in OpenMPI using
-    # OMPI_MCA_ns_nds_vpid or OMPI_MCA_ns_nds_vpid_start to send different
-    # arguments to master and worker processes
     # The fallback is to use the same arguments on master and workers,
     # with --no-save for cases where workers don't have a terminal.
     # This means that things like CMD batch won't work. It seems to be

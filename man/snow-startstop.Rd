@@ -3,6 +3,7 @@
 \alias{getMPIcluster}
 \alias{makeMPIcluster}
 \alias{makePVMcluster}
+\alias{makeNWScluster}
 \alias{makeSOCKcluster}
 \alias{makeCluster}
 \alias{stopCluster}
@@ -16,6 +17,7 @@ setDefaultClusterOptions(...)
 makeSOCKcluster(names, ..., options = defaultClusterOptions)
 makePVMcluster(count, ..., options = defaultClusterOptions)
 makeMPIcluster(count, ..., options = defaultClusterOptions)
+makeNWScluster(names, ..., options = defaultClusterOptions)
 getMPIcluster()
 }
 \arguments{
@@ -34,12 +36,14 @@ getMPIcluster()
 \details{
   \code{makeCluster} starts a cluster of the specified or default type
   and returns a reference to the cluster.  Supported cluster types are
-  \code{"SOCK"}, \code{"PVM"}, and \code{"MPI"}.  For \code{"PVM"} and
+  \code{"SOCK"}, \code{"PVM"}, \code{"MPI"}, and \code{"NWS"}.  For \code{"PVM"} and
   \code{"MPI"} clusters the \code{spec} argument should be an integer
   specifying the number of slave nodes to create.  For \code{"SOCK"}
   clusters \code{spec} should be a character vector naming the hosts on
   which slave nodes should be started; one node is started for each
-  element in the vector.
+  element in the vector.  For \code{"NWS"} clusters \code{spec} can be
+  either a character vector of node names, or an integer specifying the
+  number of slaves nodes to create on the local machine.
 
   \code{stopCluster} should be called to properly shut down the cluster
   before exiting R.  If it is not called it may be necessary to use
@@ -66,9 +70,9 @@ getMPIcluster()
   \code{/dev/null}; during debugging of an installation it can be
   useful to set this to a proper file.
 
-  The functions \code{makeSOCKcluster}, \code{makePVMcluster}, and
-  \code{makeMPIcluster} can be used to start a cluster of the
-  corresponding type.
+  The functions \code{makeSOCKcluster}, \code{makePVMcluster},
+  \code{makeMPIcluster}, and \code{makeNWScluster} can be used to start
+  a cluster of the corresponding type.
 
   In MPI configurations where process spawning is not available and
   something like \code{mpirun} is used to start a master and a set of slaves
