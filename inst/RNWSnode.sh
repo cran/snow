@@ -5,5 +5,9 @@ ${RPROG:-R} --vanilla <<EOF > ${OUT:-/dev/null} 2>&1 &
 library(nws)
 library(snow)
 
-slaveLoop(makeNWSmaster())
+local({
+    master <- makeNWSmaster()
+    sendData(master, "ping")
+    slaveLoop(master)
+})
 EOF

@@ -8,24 +8,39 @@ newPVMnode <- function(where = "",
     # **** make sure options are quoted
     scriptdir <- getClusterOption("scriptdir", options)
     outfile <- getClusterOption("outfile", options)
-    if (getClusterOption("homogeneous")) {
-        script <- file.path(scriptdir, "RPVMnode.sh")
-        rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
-        rprog <- getClusterOption("rprog", options)
-        args <- c(paste("RPROG=", rprog, sep=""),
-                  paste("OUT=", outfile, sep=""),
-                  paste("R_LIBS=", rlibs, sep=""),
-                  script)
+    homogeneous <- getClusterOption("homogeneous", options)
+    if (getClusterOption("useRscript", options)) {
+        if (homogeneous) {
+            rscript <- getClusterOption("rscript", options)
+            snowlib <- getClusterOption("snowlib", options)
+            script <- file.path(snowlib, "snow", "RPVMnode.R")
+            args <- c(script,
+                      paste("SNOWLIB=", snowlib, sep=""),
+                      paste("OUT=", outfile, sep=""))
+            pvmtask <- rscript
+        }
+        else {
+            args <- c("RPVMnode.R",
+                      paste("OUT=", outfile, sep=""))
+            pvmtask <- "RunSnowWorker"
+        }
     }
     else {
-        rlibs <- NULL
-        rprog <- NULL
-        args <- c(paste("RPROG=", rprog, sep=""),
-                  paste("OUT=", outfile, sep=""),
-                  paste("R_LIBS=", rlibs, sep=""),
-                  "RunSnowNode", "RPVMnode.sh")
+        if (homogeneous) {
+            script <- file.path(scriptdir, "RPVMnode.sh")
+            rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
+            rprog <- getClusterOption("rprog", options)
+            args <- c(paste("RPROG=", rprog, sep=""),
+                      paste("OUT=", outfile, sep=""),
+                      paste("R_LIBS=", rlibs, sep=""),
+                      script)
+        }
+        else
+            args <- c(paste("OUT=", outfile, sep=""),
+                      "RunSnowNode", "RPVMnode.sh")
+        pvmtask <- "/usr/bin/env"
     }
-    tid <- .PVM.spawn(task="/usr/bin/env", arglist = args, where = where)
+    tid <- .PVM.spawn(task=pvmtask, arglist = args, where = where)
     structure(list(tid = tid, RECVTAG = 33,SENDTAG = 22), class = "PVMnode")
 }
 

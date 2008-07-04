@@ -10,6 +10,7 @@
 \alias{enquote}
 \alias{docall}
 \alias{slaveLoop}
+\alias{sinkWorkerOutput}
 \alias{newSOCKnode}
 \alias{makeSOCKmaster}
 \alias{closeNode.SOCKnode}
@@ -72,9 +73,10 @@ initDefaultClusterOptions()
 enquote(x)
 docall(fun, args)
 slaveLoop(master)
+sinkWorkerOutput(outfile)
 
 newSOCKnode(machine = "localhost", ..., options = defaultClusterOptions)
-makeSOCKmaster()
+makeSOCKmaster(master = Sys.getenv("MASTER"), port = Sys.getenv("PORT"))
 \method{closeNode}{SOCKnode}(node)
 \method{sendData}{SOCKnode}(node, data)
 \method{recvData}{SOCKnode}(node)

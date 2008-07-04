@@ -65,24 +65,41 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
             stop(paste("a cluster already exists", comm))
         scriptdir <- getClusterOption("scriptdir", options)
         outfile <- getClusterOption("outfile", options)
-        if (getClusterOption("homogeneous")) {
-            script <- file.path(scriptdir, "RMPInode.sh")
-            rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
-            rprog <- getClusterOption("rprog", options)
-            args <- c(paste("RPROG=", rprog, sep=""),
-                      paste("OUT=", outfile, sep=""),
-                      paste("R_LIBS=", rlibs, sep=""),
-                      script)
+        homogeneous <- getClusterOption("homogeneous", options)
+        if (getClusterOption("useRscript", options)) {
+            if (homogeneous) {
+                rscript <- getClusterOption("rscript", options)
+                snowlib <- getClusterOption("snowlib", options)
+                script <- file.path(snowlib, "snow", "RMPInode.R")
+                args <- c(script,
+                          paste("SNOWLIB=", snowlib, sep=""),
+                          paste("OUT=", outfile, sep=""))
+                mpitask <- rscript
+            }
+            else {
+                args <- c("RMPInode.R",
+                          paste("OUT=", outfile, sep=""))
+                mpitask <- "RunSnowWorker"
+            }
         }
         else {
-            rlibs <- NULL
-            rprog <- NULL
-            args <- c(paste("RPROG=", rprog, sep=""),
-                      paste("OUT=", outfile, sep=""),
-                      paste("R_LIBS=", rlibs, sep=""),
-                      "RunSnowNode", "RMPInode.sh")
+            if (homogeneous) {
+                script <- file.path(scriptdir, "RMPInode.sh")
+                rlibs <- paste(getClusterOption("rlibs", options),
+                               collapse = ":")
+                rprog <- getClusterOption("rprog", options)
+                args <- c(paste("RPROG=", rprog, sep=""),
+                          paste("OUT=", outfile, sep=""),
+                          paste("R_LIBS=", rlibs, sep=""),
+                          script)
+            }
+            else {
+                args <- c(paste("OUT=", outfile, sep=""),
+                          "RunSnowNode", "RMPInode.sh")
+            }
+            mpitask <- "/usr/bin/env"
         }
-        count <- mpi.comm.spawn(slave = "/usr/bin/env", slavearg = args,
+        count <- mpi.comm.spawn(slave = mpitask, slavearg = args,
                                 nslaves = count, intercomm = intercomm)
         if (mpi.intercomm.merge(intercomm, 0, comm)) {
             mpi.comm.set.errhandler(comm)

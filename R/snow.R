@@ -64,6 +64,16 @@ slaveLoop <- function(master) {
     }
 }
 
+sinkWorkerOutput <- function(outfile) {
+    if (outfile != "") {
+        if (.Platform$OS.type == "windows" && outfile == "/dev/null")
+            outfile <- "nul:"
+        outcon <- file(outfile, open = "w")
+        sink(outcon)
+        sink(outcon, type = "message")
+    }
+}    
+
 
 #
 # Higher-Level Node Functions
@@ -101,8 +111,11 @@ initDefaultClusterOptions <- function() {
     if (Sys.getenv("R_SNOW_LIB") != "")
         homogeneous <- FALSE
     else homogeneous <- TRUE
+    if (.Platform$OS.type == "windows")
+        rscript <- file.path(rhome, "bin", "Rscript.exe")
+    else rscript <- file.path(rhome, "bin", "Rscript")
     options <- list(port = 10187,
-                    timeout = 60 * 60 * 24 * 14, # two weeks
+                    timeout = 60 * 60 * 24 * 365, # one year
                     master =  Sys.info()["nodename"],
                     homogeneous = homogeneous,
                     type = NULL,
@@ -112,7 +125,11 @@ initDefaultClusterOptions <- function() {
                     rshcmd = "ssh",
                     rlibs = Sys.getenv("R_LIBS"),
                     scriptdir = .path.package("snow"),
-                    rprog = file.path(rhome, "bin", "R"))
+                    rprog = file.path(rhome, "bin", "R"),
+                    snowlib = dirname(.path.package("snow")),
+                    rscript = rscript,
+                    useRscript = file.exists(rscript),
+                    manual = FALSE)
     defaultClusterOptions <<- addClusterOptions(emptyenv(), options)
 }
 

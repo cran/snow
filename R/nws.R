@@ -5,42 +5,101 @@
 # driver side
 newNWSnode <- function(machine = "localhost", tmpWsName, rank, ws,
                        wsServer, state, options) {
-    port <- getClusterOption("port", options)
-    scriptdir <- getClusterOption("scriptdir", options)
-    if (getClusterOption("homogeneous")) {
-        script <- file.path(scriptdir, "RNWSnode.sh")
-        rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
-        rprog <- getClusterOption("rprog", options)
-    }   
-    else {
-        script <- "RunSnowNode RNWSnode.sh"
-        rlibs <- NULL
-        rprog <- NULL
+    if (is.list(machine)) {
+        options <- addClusterOptions(options, machine)
+        machine <- machine$host
     }
-    rshcmd <- getClusterOption("rshcmd", options)
-    user <- getClusterOption("user", options)
-    env <- paste("MASTER=", getClusterOption("master", options),
-                 " PORT=", port,
-                 " OUT=", getClusterOption("outfile", options),
-                 " RANK=", rank,
-                 " TMPWS=", tmpWsName,
-                 sep="")
-    if (! is.null(rprog))
-        env <- paste(env, " RPROG=", rprog, sep="")
-    if (! is.null(rlibs))
-        env <- paste(env, " R_LIBS=", rlibs, sep="")
+    outfile <- getClusterOption("outfile", options)
+    master <- getClusterOption("master", options)
+    port <- getClusterOption("port", options)
+    manual <- getClusterOption("manual", options)
 
-    system(paste(rshcmd, "-l", user, machine, "env", env, script))
+    ## build the local command for starting the worker
+    homogeneous <- getClusterOption("homogeneous", options)
+    if (getClusterOption("useRscript", options)) {
+        if (homogeneous) {
+            rscript <- getClusterOption("rscript", options)
+            snowlib <- getClusterOption("snowlib", options)
+            script <- file.path(snowlib, "snow", "RNWSnode.R")
+            env <- paste("MASTER=", master,
+                         " PORT=", port,
+                         " OUT=", outfile,
+                         " SNOWLIB=", snowlib,
+                         " RANK=", rank,
+                         " TMPWS=", tmpWsName, sep="")
+            cmd <- paste(rscript, script, env)
+        }
+        else {
+            script <- "RunSnowWorker RNWSnode.R"
+            env <- paste("MASTER=", master,
+                         " PORT=", port,
+                         " OUT=", outfile,
+                         " RANK=", rank,
+                         " TMPWS=", tmpWsName, sep="")
+            cmd <- paste(script, env)
+        }
+    }
+    else {
+        if (homogeneous) {
+            scriptdir <- getClusterOption("scriptdir", options)
+            script <- file.path(scriptdir, "RNWSnode.sh")
+            rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
+            rprog <- getClusterOption("rprog", options)
+            env <- paste("MASTER=", master,
+                         " PORT=", port,
+                         " OUT=", outfile,
+                         " RANK=", rank,
+                         " TMPWS=", tmpWsName,
+                         " RPROG=", rprog,
+                         " R_LIBS=", rlibs, sep="")
+        }   
+        else {
+            script <- "RunSnowNode RNWSnode.sh"
+            env <- paste("MASTER=", master,
+                         " PORT=", port,
+                         " OUT=", outfile,
+                         " RANK=", rank,
+                         " TMPWS=", tmpWsName, sep="")
+        }
+        cmd <- paste("env", env, script)
+    }
+    
+    if (manual) {
+        cat("Manually start worker on", machine, "with\n    ", cmd, "\n")
+        flush.console()
+    }
+    else {
+        ## add the remote shell command if needed
+        if (machine != "localhost") {
+            rshcmd <- getClusterOption("rshcmd", options)
+            user <- getClusterOption("user", options)
+            cmd <- paste(rshcmd, "-l", user, machine, cmd)
+        }
 
-    structure(list(ws = ws,
-                   wsServer = wsServer,
-                   incomingVar = 'forDriver',
-                   outgoingVar = sprintf('forNode%04d', rank),
-                   rank = rank,
-                   state = state,
-                   mybuffer = sprintf('buffer%04d', rank),
-                   host = machine),
-              class = "NWSnode")
+        if (.Platform$OS.type == "windows") {
+            ## On windows using input = something seems needed to
+            ## disconnect standard input of an ssh process when run
+            ## from Rterm (at least using putty's plink).  In
+            ## principle this could also be used for supplying a
+            ## password, but that is probably a bad idea. So, for now
+            ## at least, on windows password-less authentication is
+            ## necessary.
+            system(cmd, wait = FALSE, input = "")
+        }
+        else system(cmd, wait = FALSE)
+    }
+
+    node <- structure(list(ws = ws,
+                           wsServer = wsServer,
+                           incomingVar = 'forDriver',
+                           outgoingVar = sprintf('forNode%04d', rank),
+                           rank = rank,
+                           state = state,
+                           mybuffer = sprintf('buffer%04d', rank),
+                           host = machine),
+                      class = "NWSnode")
+    recvData(node) ## wait for "ping" from worker
+    node
 }
 
 # compute engine side

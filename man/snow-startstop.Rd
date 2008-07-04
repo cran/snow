@@ -36,14 +36,25 @@ getMPIcluster()
 \details{
   \code{makeCluster} starts a cluster of the specified or default type
   and returns a reference to the cluster.  Supported cluster types are
-  \code{"SOCK"}, \code{"PVM"}, \code{"MPI"}, and \code{"NWS"}.  For \code{"PVM"} and
+  \code{"SOCK"}, \code{"PVM"}, \code{"MPI"}, and \code{"NWS"}.  For
+  \code{"PVM"} and
   \code{"MPI"} clusters the \code{spec} argument should be an integer
-  specifying the number of slave nodes to create.  For \code{"SOCK"}
+  specifying the number of slave nodes to create.  For \code{"SOCK"} and
+  \code{"NWS"}
   clusters \code{spec} should be a character vector naming the hosts on
   which slave nodes should be started; one node is started for each
-  element in the vector.  For \code{"NWS"} clusters \code{spec} can be
-  either a character vector of node names, or an integer specifying the
+  element in the vector.  For \code{"SOCK"} and \code{"NWS"} clusters
+  \code{spec} can also be an integer specifying the
   number of slaves nodes to create on the local machine.
+
+  For \code{SOCK} and \code{NWS} clusters the \code{spec} can also be a
+  list of machine specifications, each a list of named option values.
+  Such a list must include a character value named \code{host} host
+  specifying the name or address of the host to use.  Any other option
+  can be specified as well.  For \code{SOCK} and \code{NWS} clusters
+  this may be a more convenient alternative than inhomogeneous cluster
+  startup procedure.  The options \code{rscript} and \code{snowlib} are
+  often useful; see the examples below.
 
   \code{stopCluster} should be called to properly shut down the cluster
   before exiting R.  If it is not called it may be necessary to use
@@ -66,9 +77,11 @@ getMPIcluster()
   value.
 
   The option\code{outfile} can be used to specify the file to which
-  slave node output is to be directed.  The default is
-  \code{/dev/null}; during debugging of an installation it can be
-  useful to set this to a proper file.
+  slave node output is to be directed.  The default is \code{/dev/null};
+  during debugging of an installation it can be useful to set this to a
+  proper file.  On some systems setting \code{outfile} to \code{""} or
+  to \code{/dev/tty} will result in worker output being sent tothe
+  terminal running the master process.
 
   The functions \code{makeSOCKcluster}, \code{makePVMcluster},
   \code{makeMPIcluster}, and \code{makeNWScluster} can be used to start
@@ -84,13 +97,42 @@ getMPIcluster()
   cluster.  This interface is still experimental and
   subject to change.
 
+  For SOCK and NWS clusters the option \code{manual = TRUE} forces a
+  manual startup mode in which the master prints the command to be run
+  manually to start a worker process. Together with setting the
+  \code{outfile} option this can be useful for debugging cluster startup.
+
   For more details see
   \url{http://www.stat.uiowa.edu/~luke/R/cluster/cluster.html}.
 }
 \examples{
   \dontrun{
+## Two workers run on the local machine as a SOCK cluster.
 cl <- makeCluster(c("localhost","localhost"), type = "SOCK")
 clusterApply(cl, 1:2, get("+"), 3)
+stopCluster(cl)
+## Another approach to running on the local machine as a SOCK cluster.
+cl <- makeCluster(2, type = "SOCK")
+clusterApply(cl, 1:2, get("+"), 3)
+stopCluster(cl)
+## A SOCK cluster with two workers on Mac OS X, two on Linux, and two
+## on Windows:
+macOptions <-
+    list(host = "owasso",
+         rscript = "/Library/Frameworks/R.framework/Resources/bin/Rscript",
+         snowlib = "/Library/Frameworks/R.framework/Resources/library/snow")
+lnxOptions <-
+    list(host = "itasca",
+         rscript = "/usr/lib64/R/bin/Rscript",
+	 snowlib = "/home/luke/tmp/lib")
+winOptions <-
+    list(host="192.168.1.168",
+         rscript="C:/Program Files/R/R-2.7.1/bin/Rscript.exe",
+         snowlib="C:/Rlibs")
+cl <- makeCluster(c(rep(macoptions, 2), rep(lnxOptions, 2),
+  rep(winOptions, 2), type = "SOCK")
+clusterApply(cl, 1:2, get("+"), 3)
+stopCluster(cl)
   }
 }
 \keyword{programming}
