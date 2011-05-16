@@ -3,7 +3,7 @@
 #
 
 newPVMnode <- function(where = "",
-                       options = defaultClusterOptions) {
+                       options = defaultClusterOptions, rank) {
     # **** allow some form of spec here
     # **** make sure options are quoted
     scriptdir <- getClusterOption("scriptdir", options)
@@ -11,9 +11,9 @@ newPVMnode <- function(where = "",
     homogeneous <- getClusterOption("homogeneous", options)
     if (getClusterOption("useRscript", options)) {
         if (homogeneous) {
-            rscript <- getClusterOption("rscript", options)
+            rscript <- shQuoteIfNeeded(getClusterOption("rscript", options))
             snowlib <- getClusterOption("snowlib", options)
-            script <- file.path(snowlib, "snow", "RPVMnode.R")
+            script <- shQuoteIfNeeded(file.path(snowlib, "snow", "RPVMnode.R"))
             args <- c(script,
                       paste("SNOWLIB=", snowlib, sep=""),
                       paste("OUT=", outfile, sep=""))
@@ -27,9 +27,9 @@ newPVMnode <- function(where = "",
     }
     else {
         if (homogeneous) {
-            script <- file.path(scriptdir, "RPVMnode.sh")
+            script <- shQuoteIfNeeded(file.path(scriptdir, "RPVMnode.sh"))
             rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
-            rprog <- getClusterOption("rprog", options)
+            rprog <- shQuoteIfNeeded(getClusterOption("rprog", options))
             args <- c(paste("RPROG=", rprog, sep=""),
                       paste("OUT=", outfile, sep=""),
                       paste("R_LIBS=", rlibs, sep=""),
@@ -41,7 +41,7 @@ newPVMnode <- function(where = "",
         pvmtask <- "/usr/bin/env"
     }
     tid <- .PVM.spawn(task=pvmtask, arglist = args, where = where)
-    structure(list(tid = tid, RECVTAG = 33,SENDTAG = 22), class = "PVMnode")
+    structure(list(tid = tid, RECVTAG = 33,SENDTAG = 22, rank = rank), class = "PVMnode")
 }
 
 makePVMmaster <- function()
@@ -78,7 +78,7 @@ makePVMcluster <- function(count, ..., options = defaultClusterOptions) {
     options <- addClusterOptions(options, list(...))
     cl <- vector("list",count)
     for (i in seq(along=cl))
-        cl[[i]] <- newPVMnode(options = options)
+        cl[[i]] <- newPVMnode(options = options, rank = i)
     class(cl) <- c("PVMcluster", "cluster")
     cl
 }

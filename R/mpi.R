@@ -68,9 +68,10 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
         homogeneous <- getClusterOption("homogeneous", options)
         if (getClusterOption("useRscript", options)) {
             if (homogeneous) {
-                rscript <- getClusterOption("rscript", options)
+                rscript <- shQuoteIfNeeded(getClusterOption("rscript", options))
                 snowlib <- getClusterOption("snowlib", options)
-                script <- file.path(snowlib, "snow", "RMPInode.R")
+                script <- shQuoteIfNeeded(file.path(snowlib, "snow",
+                                                    "RMPInode.R"))
                 args <- c(script,
                           paste("SNOWLIB=", snowlib, sep=""),
                           paste("OUT=", outfile, sep=""))
@@ -84,10 +85,10 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
         }
         else {
             if (homogeneous) {
-                script <- file.path(scriptdir, "RMPInode.sh")
+                script <- shQuoteIfNeeded(file.path(scriptdir, "RMPInode.sh"))
                 rlibs <- paste(getClusterOption("rlibs", options),
                                collapse = ":")
-                rprog <- getClusterOption("rprog", options)
+                rprog <- shQuoteIfNeeded(getClusterOption("rprog", options))
                 args <- c(paste("RPROG=", rprog, sep=""),
                           paste("OUT=", outfile, sep=""),
                           paste("R_LIBS=", rlibs, sep=""),

@@ -5,7 +5,7 @@
 #**** allow user to be different on different machines
 #**** allow machines to be selected from a hosts list
 newSOCKnode <- function(machine = "localhost", ...,
-                        options = defaultClusterOptions) {
+                        options = defaultClusterOptions, rank) {
     # **** allow some form of spec here
     # **** make sure options are quoted
     options <- addClusterOptions(options, list(...))
@@ -23,9 +23,9 @@ newSOCKnode <- function(machine = "localhost", ...,
     homogeneous <- getClusterOption("homogeneous", options)
     if (getClusterOption("useRscript", options)) {
         if (homogeneous) {
-            rscript <- getClusterOption("rscript", options)
+            rscript <- shQuoteIfNeeded(getClusterOption("rscript", options))
             snowlib <- getClusterOption("snowlib", options)
-            script <- file.path(snowlib, "snow", "RSOCKnode.R")
+            script <- shQuoteIfNeeded(file.path(snowlib, "snow", "RSOCKnode.R"))
             env <- paste("MASTER=", master,
                          " PORT=", port,
                          " OUT=", outfile,
@@ -43,9 +43,9 @@ newSOCKnode <- function(machine = "localhost", ...,
     else {
         if (homogeneous) {
             scriptdir <- getClusterOption("scriptdir", options)
-            script <- file.path(scriptdir, "RSOCKnode.sh")
+            script <- shQuoteIfNeeded(file.path(scriptdir, "RSOCKnode.sh"))
             rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
-            rprog <- getClusterOption("rprog", options)
+            rprog <- shQuoteIfNeeded(getClusterOption("rprog", options))
             env <- paste("MASTER=", master,
                          " PORT=", port,
                          " OUT=", outfile,
@@ -93,7 +93,7 @@ newSOCKnode <- function(machine = "localhost", ...,
     on.exit(options(old))
     con <- socketConnection(port = port, server=TRUE, blocking=TRUE,
                             open="a+b")
-    structure(list(con = con, host = machine), class = "SOCKnode")
+    structure(list(con = con, host = machine, rank = rank), class = "SOCKnode")
 }
 
 makeSOCKmaster <- function(master = Sys.getenv("MASTER"),
@@ -140,7 +140,7 @@ makeSOCKcluster <- function(names, ..., options = defaultClusterOptions) {
     options <- addClusterOptions(options, list(...))
     cl <- vector("list",length(names))
     for (i in seq(along=cl))
-        cl[[i]] <- newSOCKnode(names[[i]], options = options)
+        cl[[i]] <- newSOCKnode(names[[i]], options = options, rank = i)
     class(cl) <- c("SOCKcluster", "cluster")
     cl
 }

@@ -49,7 +49,7 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   arguments \code{seq[[1]]} and \code{...}, on the second node with
   \code{seq[[2]]} and \code{...}, and so on.  If the length of
   \code{seq} is greater than the number of nodes in the cluster then
-  cluster nodes are reqycled. A list of the results is returned; the
+  cluster nodes are recycled. A list of the results is returned; the
   length of the result list will equal the length of \code{seq}.
 
   \code{clusterApplyLB} is a load balancing version of \code{clusterApply}.

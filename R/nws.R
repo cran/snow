@@ -18,9 +18,9 @@ newNWSnode <- function(machine = "localhost", tmpWsName, rank, ws,
     homogeneous <- getClusterOption("homogeneous", options)
     if (getClusterOption("useRscript", options)) {
         if (homogeneous) {
-            rscript <- getClusterOption("rscript", options)
+            rscript <- shQuoteIfNeeded(getClusterOption("rscript", options))
             snowlib <- getClusterOption("snowlib", options)
-            script <- file.path(snowlib, "snow", "RNWSnode.R")
+            script <- shQuoteIfNeeded(file.path(snowlib, "snow", "RNWSnode.R"))
             env <- paste("MASTER=", master,
                          " PORT=", port,
                          " OUT=", outfile,
@@ -42,9 +42,9 @@ newNWSnode <- function(machine = "localhost", tmpWsName, rank, ws,
     else {
         if (homogeneous) {
             scriptdir <- getClusterOption("scriptdir", options)
-            script <- file.path(scriptdir, "RNWSnode.sh")
+            script <- shQuoteIfNeeded(file.path(scriptdir, "RNWSnode.sh"))
             rlibs <- paste(getClusterOption("rlibs", options), collapse = ":")
-            rprog <- getClusterOption("rprog", options)
+            rprog <- shQuoteIfNeeded(getClusterOption("rprog", options))
             env <- paste("MASTER=", master,
                          " PORT=", port,
                          " OUT=", outfile,

@@ -7,7 +7,6 @@
 \alias{stopCluster.spawnedMPIcluster}
 \alias{stopCluster.NWScluster}
 \alias{defaultClusterOptions}
-\alias{enquote}
 \alias{docall}
 \alias{slaveLoop}
 \alias{sinkWorkerOutput}
@@ -61,6 +60,7 @@
 \alias{staticClusterApply}
 \alias{dynamicClusterApply}
 \alias{[.cluster}
+\alias{shQuoteIfNeeded}
 \usage{
 \method{stopCluster}{default}(cl)
 \method{stopCluster}{MPIcluster}(cl)
@@ -70,18 +70,17 @@ defaultClusterOptions
 addClusterOptions(options, new)
 initDefaultClusterOptions()
 
-enquote(x)
 docall(fun, args)
 slaveLoop(master)
 sinkWorkerOutput(outfile)
 
-newSOCKnode(machine = "localhost", ..., options = defaultClusterOptions)
+newSOCKnode(machine = "localhost", ..., options = defaultClusterOptions, rank)
 makeSOCKmaster(master = Sys.getenv("MASTER"), port = Sys.getenv("PORT"))
 \method{closeNode}{SOCKnode}(node)
 \method{sendData}{SOCKnode}(node, data)
 \method{recvData}{SOCKnode}(node)
 
-newPVMnode(where = "", options = defaultClusterOptions)
+newPVMnode(where = "", options = defaultClusterOptions, rank)
 makePVMmaster()
 \method{sendData}{PVMnode}(node, data)
 \method{recvData}{PVMnode}(node)
@@ -126,6 +125,8 @@ checkForRemoteErrors(val)
 staticClusterApply(cl, fun, n, argfun)
 dynamicClusterApply(cl, fun, n, argfun)
 \method{[}{cluster}(cl, ...)
+
+shQuoteIfNeeded(p)
 }
 \description{
   Internal functions for the snow package.

@@ -2,16 +2,19 @@
 # Utilities
 #
 
-enquote <- function(x) as.call(list(as.name("quote"), x))
-
 docall <- function(fun, args) {
     if ((is.character(fun) && length(fun) == 1) || is.name(fun))
         fun <- get(as.character(fun), env = .GlobalEnv, mode = "function")
     do.call("fun", lapply(args, enquote))
 }
 
-if (! exists("emptyenv"))
-    emptyenv <- function() NULL
+shQuoteIfNeeded <- function(p) {
+    if (length(grep("[[:space:]]", p)) == 0)
+        p
+    else if (.Platform$OS.type == "windows")
+        shQuote(p)
+    else stop("file names with spaces do not work properly on this platform")
+}
 
 
 #
@@ -35,7 +38,7 @@ checkCluster <- function(cl) {
 #
 
 slaveLoop <- function(master) {
-    repeat {
+    repeat tryCatch({
         msg <- recvData(master)
 	cat(paste("Type:", msg$type, "\n"))
 
@@ -61,7 +64,7 @@ slaveLoop <- function(master) {
                           time = t2 - t1, tag = msg$data$tag)
             sendData(master, value)
         }
-    }
+    }, interrupt = function(e) NULL)
 }
 
 sinkWorkerOutput <- function(outfile) {
@@ -174,12 +177,28 @@ stopCluster.default <- function(cl)
 # Cluster Functions
 #
 
-sendCall <- function(con, fun, args, return = TRUE, tag = NULL)
+sendCall <- function (con, fun, args, return = TRUE, tag = NULL) {
     #**** mark node as in-call
-    postNode(con, "EXEC", list(fun = fun, args = args, return = return,
+    timing <-  .snowTimingData$running()
+    if (timing)
+        start <- proc.time()[3]
+    postNode(con, "EXEC", list(fun = fun, args = args, return = return, 
                                tag = tag))
+    if (timing)
+        .snowTimingData$enterSend(con$rank, start, proc.time()[3])
+    NULL
+}
 
-recvResult <- function(con) recvData(con)$value
+recvResult <- function (con)  {
+  if (.snowTimingData$running()) {
+      start <- proc.time()[3]
+      r <- recvData(con)
+      end <- proc.time()[3]
+      .snowTimingData$enterRecv(con$rank, start, end, r$time[3])
+  }
+  else r <- recvData(con)
+  r$value
+}
 
 checkForRemoteErrors <- function(val) {
     count <- 0
@@ -253,8 +272,14 @@ clusterExport <- local({
 #     }
 # }
 
-recvOneResult <- function(cl) {
-    v <- recvOneData(cl)
+recvOneResult <- function (cl) {
+    if (.snowTimingData$running()) {
+        start <- proc.time()[3]
+        v <- recvOneData(cl)
+        end <- proc.time()[3]
+        .snowTimingData$enterRecv(v$node, start, end, v$value$time[3])
+    }
+    else v <- recvOneData(cl)
     list(value = v$value$value, node = v$node, tag = v$value$tag)
 }
 
@@ -292,6 +317,7 @@ dynamicClusterApply <- function(cl, fun, n, argfun) {
 }
 
 clusterApplyLB <- function(cl, x, fun, ...) {
+    ## **** this closure is sending all of x to all nodes
     argfun <- function(i) c(list(x[[i]]), list(...))
     dynamicClusterApply(cl, fun, length(x), argfun)
 }
@@ -311,6 +337,7 @@ clusterMap <- function (cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE) {
                 length = max(n))
     }
     else vlen = min(n)
+    ## **** this closure is sending all of ... to all nodes
     argfun <- function(i) c(lapply(args, function(x) x[[i]]), MoreArgs)
     staticClusterApply(cl, fun, vlen, argfun)
 }
