@@ -68,7 +68,7 @@
 \method{stopCluster}{NWScluster}(cl)
 defaultClusterOptions
 addClusterOptions(options, new)
-initDefaultClusterOptions()
+initDefaultClusterOptions(libname)
 
 docall(fun, args)
 slaveLoop(master)

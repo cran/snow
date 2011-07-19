@@ -4,7 +4,7 @@
 
 docall <- function(fun, args) {
     if ((is.character(fun) && length(fun) == 1) || is.name(fun))
-        fun <- get(as.character(fun), env = .GlobalEnv, mode = "function")
+        fun <- get(as.character(fun), envir = .GlobalEnv, mode = "function")
     do.call("fun", lapply(args, enquote))
 }
 
@@ -24,8 +24,8 @@ shQuoteIfNeeded <- function(p) {
 checkCluster <- function(cl) {
     if (! inherits(cl, "cluster"))
         stop("not a valid cluster");
-}    
-    
+}
+
 "[.cluster" <-function(cl,...) {
     v<-unclass(cl)[...]
     class(v)<-class(cl)
@@ -75,7 +75,7 @@ sinkWorkerOutput <- function(outfile) {
         sink(outcon)
         sink(outcon, type = "message")
     }
-}    
+}
 
 
 #
@@ -99,7 +99,7 @@ stopNode <- function(n) {
 
 
 recvOneData <- function(cl) UseMethod("recvOneData")
-    
+
 
 #
 #  Cluster Creation and Destruction
@@ -109,7 +109,7 @@ defaultClusterOptions <- NULL
 
 #**** check valid cluster option
 
-initDefaultClusterOptions <- function() {
+initDefaultClusterOptions <- function(libname) {
     rhome <- Sys.getenv("R_HOME")
     if (Sys.getenv("R_SNOW_LIB") != "")
         homogeneous <- FALSE
@@ -127,9 +127,9 @@ initDefaultClusterOptions <- function() {
                     user = Sys.info()["user"],
                     rshcmd = "ssh",
                     rlibs = Sys.getenv("R_LIBS"),
-                    scriptdir = .path.package("snow"),
+                    scriptdir = file.path(libname, "snow"),
                     rprog = file.path(rhome, "bin", "R"),
-                    snowlib = dirname(.path.package("snow")),
+                    snowlib = libname,
                     rscript = rscript,
                     useRscript = file.exists(rscript),
                     manual = FALSE)
@@ -141,19 +141,19 @@ addClusterOptions <- function(options, new) {
         options <- new.env(parent = options)
         names <- names(new)
         for (i in seq(along = new))
-            assign(names[i], new[[i]], env = options)
+            assign(names[i], new[[i]], envir = options)
     }
     options
 }
 
 getClusterOption <- function(name, options = defaultClusterOptions)
-    get(name, env = options)
+    get(name, envir = options)
 
 setDefaultClusterOptions <- function(...) {
     list <- list(...)
     names <- names(list)
     for (i in seq(along = list))
-        assign(names[i], list[[i]], env = defaultClusterOptions)
+        assign(names[i], list[[i]], envir = defaultClusterOptions)
 }
 
 makeCluster <- function(spec, type = getClusterOption("type"), ...) {
@@ -182,7 +182,7 @@ sendCall <- function (con, fun, args, return = TRUE, tag = NULL) {
     timing <-  .snowTimingData$running()
     if (timing)
         start <- proc.time()[3]
-    postNode(con, "EXEC", list(fun = fun, args = args, return = return, 
+    postNode(con, "EXEC", list(fun = fun, args = args, return = return,
                                tag = tag))
     if (timing)
         .snowTimingData$enterSend(con$rank, start, proc.time()[3])
@@ -215,7 +215,7 @@ checkForRemoteErrors <- function(val) {
         stop(count, " nodes produced errors; first error: ", firstmsg)
     val
 }
-            
+
 clusterCall  <- function(cl, fun, ...) {
     checkCluster(cl)
     for (i in seq(along = cl))
@@ -232,7 +232,7 @@ staticClusterApply <- function(cl, fun, n, argfun) {
         while (start <= n) {
             end <- min(n, start + p - 1)
 	    jobs <- end - start + 1
-            for (i in 1:jobs) 
+            for (i in 1:jobs)
                 sendCall(cl[[i]], fun, argfun(start + i - 1))
             val[start:end] <- lapply(cl[1:jobs], recvResult)
             start <- start + jobs
@@ -250,11 +250,11 @@ clusterEvalQ<-function(cl, expr)
     clusterCall(cl, eval, substitute(expr), env=.GlobalEnv)
 
 clusterExport <- local({
-    gets <- function(n, v) { assign(n, v, env = .GlobalEnv); NULL }
+    gets <- function(n, v) { assign(n, v, envir = .GlobalEnv); NULL }
     function(cl, list) {
         ## do this with only one clusterCall--loop on slaves?
         for (name in list) {
-            clusterCall(cl, gets, name, get(name, env = .GlobalEnv))
+            clusterCall(cl, gets, name, get(name, envir = .GlobalEnv))
         }
     }
 })
@@ -262,9 +262,9 @@ clusterExport <- local({
 ## A variant that does the exports one at at ime--this may be useful
 ## when large objects are being sent
 # clusterExportSerial <- function(cl, list) {
-#     gets <- function(n, v) { assign(n, v, env = .GlobalEnv); NULL }
+#     gets <- function(n, v) { assign(n, v, envir = .GlobalEnv); NULL }
 #     for (name in list) {
-#         v <- get(name, env = .GlobalEnv)
+#         v <- get(name, envir = .GlobalEnv)
 #         for (i in seq(along = cl)) {
 #             sendCall(cl[[i]], gets, list(name, v))
 #             recvResult(cl[[i]])
@@ -327,13 +327,13 @@ clusterApplyLB <- function(cl, x, fun, ...) {
 clusterMap <- function (cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE) {
     checkCluster(cl)
     args <- list(...)
-    if (length(args) == 0) 
+    if (length(args) == 0)
         stop("need at least one argument")
     n <- sapply(args, length)
     if (RECYCLE) {
         vlen <- max(n)
-        if (!all(n == vlen)) 
-            for (i in 1:length(args)) args[[i]] <- rep(args[[i]], 
+        if (!all(n == vlen))
+            for (i in 1:length(args)) args[[i]] <- rep(args[[i]],
                 length = max(n))
     }
     else vlen = min(n)
@@ -363,12 +363,12 @@ clusterSetupRNG <- function (cl, type="RNGstream", ...) {
 
 
 #
-# Cluster SPRNG Support 
+# Cluster SPRNG Support
 #
 # adapted from rpvm (Li & Rossini)
 
 clusterSetupSPRNG <- function (cl, seed = round(2^32 * runif(1)),
-                            prngkind = "default", para = 0, ...) 
+                            prngkind = "default", para = 0, ...)
 {
     if (!is.character(prngkind) || length(prngkind) > 1)
         stop("'rngkind' must be a character string of length 1.")
@@ -382,11 +382,11 @@ clusterSetupSPRNG <- function (cl, seed = round(2^32 * runif(1)),
     invisible(clusterApply(cl, 0:(nc-1), initSprngNode, nc, seed, kind, para))
 }
 
-initSprngNode <- function (streamno, nstream, seed, kind, para) 
+initSprngNode <- function (streamno, nstream, seed, kind, para)
 {
     if (! require(rsprng))
         stop("the `rsprng' package is needed for SPRNG support.")
-    .Call("r_init_sprng", as.integer(kind), as.integer(streamno), 
+    .Call("r_init_sprng", as.integer(kind), as.integer(streamno),
         as.integer(nstream), as.integer(seed), as.integer(para),
         PACKAGE = "rsprng")
     RNGkind("user")
@@ -411,7 +411,7 @@ clusterSetupRNGstream <- function (cl, seed=rep(12345,6), ...) {
 
 initRNGstreamNode <- function (stream) {
     if (! require(rlecuyer))
-        stop("the `rlecuyer' package is needed for RNGstream support.") 
+        stop("the `rlecuyer' package is needed for RNGstream support.")
 
     if (length(.lec.Random.seed.table$name) > 0) {
 	rm(".lec.Random.seed.table", envir=.GlobalEnv)
@@ -475,17 +475,17 @@ parMM <- function(cl, A, B)
     docall(rbind,clusterApply(cl, splitRows(A, length(cl)), get("%*%"), B))
 
 # adapted from sapply in the R sources
-parSapply <- function (cl, X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE) 
+parSapply <- function (cl, X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE)
 {
     FUN <- match.fun(FUN) # should this be done on slave?
     answer <- parLapply(cl,as.list(X), FUN, ...)
-    if (USE.NAMES && is.character(X) && is.null(names(answer))) 
+    if (USE.NAMES && is.character(X) && is.null(names(answer)))
         names(answer) <- X
     if (simplify && length(answer) != 0) {
         common.len <- unique(unlist(lapply(answer, length)))
-        if (common.len == 1) 
+        if (common.len == 1)
             unlist(answer, recursive = FALSE)
-        else if (common.len > 1) 
+        else if (common.len > 1)
             array(unlist(answer, recursive = FALSE),
                   dim = c(common.len, length(X)),
                   dimnames = list(names(answer[[1]]), names(answer)))
@@ -545,7 +545,7 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
     } else
         arglist <- lapply(1:d2, function(i) array(newX[,i], d.call, dn.call))
     ans <- parLapply(cl, arglist, FUN, ...)
-    
+
     ## answer dims and dimnames
 
     ans.list <- is.recursive(ans[[1]])
@@ -578,18 +578,16 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
 #  Library Initialization
 #
 
-.First.lib <- function(libname, pkgname) {
-    if (is.null(defaultClusterOptions)) {
-	initDefaultClusterOptions()
-        if (length(find("mpi.comm.size")) != 0)
-            type <- "MPI"
-        else if (length(.find.package("rpvm", quiet = TRUE)) != 0)
-            type <- "PVM"
-        else if (length(.find.package("Rmpi", quiet = TRUE)) != 0)
-            type <- "MPI"
-        else if (length(.find.package("nws", quiet = TRUE)) != 0)
-            type <- "NWS"
-        else type <- "SOCK"
-        setDefaultClusterOptions(type = type)
-    }
+.onLoad <- function(libname, pkgname) {
+    initDefaultClusterOptions(libname)
+    if (exists("mpi.comm.size"))
+        type <- "MPI"
+    else if (length(.find.package("rpvm", quiet = TRUE)) != 0)
+        type <- "PVM"
+    else if (length(.find.package("Rmpi", quiet = TRUE)) != 0)
+        type <- "MPI"
+    else if (length(.find.package("nws", quiet = TRUE)) != 0)
+        type <- "NWS"
+    else type <- "SOCK"
+    setDefaultClusterOptions(type = type)
 }

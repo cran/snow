@@ -47,7 +47,7 @@
         i <- incrementIndex(rank)
         nr <- nrow(data$data[[rank]])
         if (nr < i)
-            data$data[[rank]] <<- rbind(nrow(data$data[[rank]]),
+            data$data[[rank]] <<- rbind(data$data[[rank]],
                                         matrix(NA_real_, nr, 5))
         data$data[[rank]][i, 1:2] <<- c(start, end)
     }
