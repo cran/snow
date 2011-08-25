@@ -14,7 +14,8 @@ local({
                OUT = outfile <- value)
     }
 
-    .libPaths(c(snowlib, .libPaths()))
+    if (! (snowlib %in% .libPaths()))
+        .libPaths(c(snowlib, .libPaths()))
     library(methods) ## because Rscript as of R 2.7.0 doesn't load methods
     library(rpvm)
     library(snow)

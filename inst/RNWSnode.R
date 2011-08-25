@@ -25,7 +25,8 @@ local({
     Sys.setenv(RANK = rank)
     Sys.setenv(TMPWS = tmpWsName)
 
-    .libPaths(c(snowlib, .libPaths()))
+    if (! (snowlib %in% .libPaths()))
+        .libPaths(c(snowlib, .libPaths()))
     library(methods) ## because Rscript as of R 2.7.0 doesn't load methods
     library(nws)
     library(snow)
