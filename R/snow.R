@@ -118,7 +118,7 @@ initDefaultClusterOptions <- function(libname) {
         rscript <- file.path(rhome, "bin", "Rscript.exe")
     else rscript <- file.path(rhome, "bin", "Rscript")
     options <- list(port = 10187,
-                    timeout = 60 * 60 * 24 * 365, # one year
+                    timeout = 60 * 60 * 24 * 30, # 30 days
                     master =  Sys.info()["nodename"],
                     homogeneous = homogeneous,
                     type = NULL,
@@ -251,10 +251,10 @@ clusterEvalQ<-function(cl, expr)
 
 clusterExport <- local({
     gets <- function(n, v) { assign(n, v, envir = .GlobalEnv); NULL }
-    function(cl, list) {
+    function(cl, list, envir = .GlobalEnv) {
         ## do this with only one clusterCall--loop on slaves?
         for (name in list) {
-            clusterCall(cl, gets, name, get(name, envir = .GlobalEnv))
+            clusterCall(cl, gets, name, get(name, envir = envir))
         }
     }
 })
@@ -448,6 +448,20 @@ splitIndices <- function(nx, ncl) {
     i <- 1:nx;
     if (ncl == 1) i
     else structure(split(i, cut(i, ncl)), names=NULL)
+}
+
+# The fuzz used by cut() is too small when nx and ncl are both large
+# and causes some groups to be empty. The definition below avoids that
+# while minimizing changes from the results produced by the definition
+# above.
+splitIndices <- function(nx, ncl) {
+    i <- 1:nx;
+    if (ncl == 1) i
+    else {
+        fuzz <- min((nx - 1) / 1000, 0.4 * nx / ncl)
+        breaks <- seq(1 - fuzz, nx + fuzz, length = ncl + 1)
+        structure(split(i, cut(i, breaks)), names = NULL)
+    }
 }
 
 clusterSplit <- function(cl, seq)

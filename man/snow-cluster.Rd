@@ -13,7 +13,7 @@ clusterCall(cl, fun, ...)
 clusterApply(cl, x, fun, ...)
 clusterApplyLB(cl, x, fun, ...)
 clusterEvalQ(cl, expr)
-clusterExport(cl, list)
+clusterExport(cl, list, envir = .GlobalEnv)
 clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
 }
 \arguments{
@@ -22,6 +22,7 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   \item{expr}{expression to evaluate}
   \item{seq}{vector to split}
   \item{list}{character vector of variables to export}
+  \item{envir}{environment from which t export variables}
   \item{x}{array}
   \item{...}{additional arguments to pass to standard function}
   \item{MoreArgs}{additional argument for \code{fun}}
@@ -69,9 +70,10 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   the shortest argument.  Cluster nodes are recycled if the length of
   the result is greater than the number of nodes.
   
-  \code{clusterExport} assigns the global values on the master of the
-  variables named in \code{list} to variables of the same names in the
-  global environments of each node.
+  \code{clusterExport} assigns the values on the master of the variables
+  named in \code{list} to variables of the same names in the global
+  environments of each node.  The environment on the master from which
+  variables are exported defaults to the global environment.
 
   \code{clusterSplit} splits \code{seq} into one consecutive piece for
   each cluster and returns the result as a list with length equal to the
