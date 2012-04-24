@@ -120,7 +120,7 @@ stopCluster(cl)
 macOptions <-
     list(host = "owasso",
          rscript = "/Library/Frameworks/R.framework/Resources/bin/Rscript",
-         snowlib = "/Library/Frameworks/R.framework/Resources/library/snow")
+         snowlib = "/Library/Frameworks/R.framework/Resources/library")
 lnxOptions <-
     list(host = "itasca",
          rscript = "/usr/lib64/R/bin/Rscript",
@@ -129,9 +129,9 @@ winOptions <-
     list(host="192.168.1.168",
          rscript="C:/Program Files/R/R-2.7.1/bin/Rscript.exe",
          snowlib="C:/Rlibs")
-cl <- makeCluster(c(rep(macoptions, 2), rep(lnxOptions, 2),
-  rep(winOptions, 2), type = "SOCK")
-clusterApply(cl, 1:2, get("+"), 3)
+cl <- makeCluster(c(rep(list(macOptions), 2), rep(list(lnxOptions), 2),
+                    rep(list(winOptions), 2), type = "SOCK")
+clusterApply(cl, 1:6, get("+"), 3)
 stopCluster(cl)
   }
 }

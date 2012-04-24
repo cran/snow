@@ -1,4 +1,4 @@
-5aff0e0075143493c86623fb15085dce *DESCRIPTION
+063cb9ea1fc808e14a8088210de72844 *DESCRIPTION
 e8edaef7a57ba16230ebe794beaa0959 *NAMESPACE
 a2cb431a26771f0a2904438d07441fb6 *R/mpi.R
 c23ede909df21618d7c814e943fb84f1 *R/nws.R
@@ -24,5 +24,5 @@ e7f48f5490678c7177fd909af75862d2 *inst/RPVMnode.R
 44b1cbbfa1fe978da1d367a6b73b5f4e *man/snow-internal.Rd
 6dcb34ff5c1151176b87e9e7a353e038 *man/snow-parallel.Rd
 f32461fec0eccbeef5e2e29ab3787201 *man/snow-rand.Rd
-227507da0dc53f00c20b37177d50f01a *man/snow-startstop.Rd
+169475a0bbda4e308693edc929a6f46d *man/snow-startstop.Rd
 31ba5f9fda5da83fbdac36eaf05c117f *man/snow-timing.Rd
