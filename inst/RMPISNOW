@@ -22,11 +22,20 @@ if test ! -z "${LAMRANK}" ; then
     fi
 elif test ! -z "${OMPI_MCA_ns_nds_vpid}" ; then
     # Similar approach for OpenMPI using the OMPI_MCA_ns_nds_vpid
-    # variable.  Don't know if it might be better to use
-    # OMPI_MCA_ns_nds_vpid_start instead.  The master R process thinks
-    # it is non-interactive so for now --no-save or something like
-    # that is needed.
+    # variable.  This is for backward compatibility with pre-1.3
+    # versions.  The master R process thinks it is non-interactive so
+    # for now --no-save or something like that is needed.
     if test "${OMPI_MCA_ns_nds_vpid}" -eq 0 ; then
+	exec R --no-save $*
+    else
+	exec R --slave > /dev/null 2>&1
+    fi
+elif test ! -z "${OMPI_COMM_WORLD_RANK}" ; then
+    # Similar approach for OpenMPI using the OMPI_COMM_WORLD_RANK
+    # variable.  This is the correct variable to use as of v1.3+.  The
+    # master R process thinks it is non-interactive so for now
+    # --no-save or something like that is needed.
+    if test "${OMPI_COMM_WORLD_RANK}" -eq 0 ; then
 	exec R --no-save $*
     else
 	exec R --slave > /dev/null 2>&1
