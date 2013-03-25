@@ -52,7 +52,7 @@ newNWSnode <- function(machine = "localhost", tmpWsName, rank, ws,
                          " TMPWS=", tmpWsName,
                          " RPROG=", rprog,
                          " R_LIBS=", rlibs, sep="")
-        }   
+        }
         else {
             script <- "RunSnowNode RNWSnode.sh"
             env <- paste("MASTER=", master,
@@ -63,7 +63,7 @@ newNWSnode <- function(machine = "localhost", tmpWsName, rank, ws,
         }
         cmd <- paste("env", env, script)
     }
-    
+
     if (manual) {
         cat("Manually start worker on", machine, "with\n    ", cmd, "\n")
         flush.console()
@@ -204,7 +204,7 @@ makeNWScluster <- function(names=rep('localhost', 3), ..., options = defaultClus
         names <- rep('localhost', names[1])
 
     options <- addClusterOptions(options,
-       list(port = 8765, scriptdir = .path.package("snow")))
+       list(port = 8765, scriptdir = path.package("snow")))
     options <- addClusterOptions(options, list(...))
 
     wsServer <- nwsServer(serverHost = getClusterOption("master", options),
@@ -215,7 +215,7 @@ makeNWScluster <- function(names=rep('localhost', 3), ..., options = defaultClus
     tmpWsName = nwsMktempWs(wsServer, 'snow_nws_%04d')
     ws = nwsOpenWs(wsServer, tmpWsName)
     cl <- vector("list", length(names))
-    for (i in seq(along=cl)) 
+    for (i in seq(along=cl))
         cl[[i]] <- newNWSnode(names[[i]], tmpWsName = tmpWsName, rank = i,
                               ws = ws, wsServer = wsServer, state = state, options = options)
 

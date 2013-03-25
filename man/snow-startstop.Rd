@@ -130,7 +130,7 @@ winOptions <-
          rscript="C:/Program Files/R/R-2.7.1/bin/Rscript.exe",
          snowlib="C:/Rlibs")
 cl <- makeCluster(c(rep(list(macOptions), 2), rep(list(lnxOptions), 2),
-                    rep(list(winOptions), 2), type = "SOCK")
+                    rep(list(winOptions), 2)), type = "SOCK")
 clusterApply(cl, 1:6, get("+"), 3)
 stopCluster(cl)
   }

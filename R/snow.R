@@ -117,7 +117,12 @@ initDefaultClusterOptions <- function(libname) {
     if (.Platform$OS.type == "windows")
         rscript <- file.path(rhome, "bin", "Rscript.exe")
     else rscript <- file.path(rhome, "bin", "Rscript")
-    options <- list(port = 10187,
+    port <- 10187
+    port <- as.integer(Sys.getenv("R_PARALLEL_PORT"))
+    if (is.na(port))
+        port <-
+            11000 + 1000 * ((stats::runif(1L) + unclass(Sys.time())/300) %% 1)
+    options <- list(port = as.integer(port),
                     timeout = 60 * 60 * 24 * 30, # 30 days
                     master =  Sys.info()["nodename"],
                     homogeneous = homogeneous,
@@ -596,11 +601,11 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
     initDefaultClusterOptions(libname)
     if (exists("mpi.comm.size"))
         type <- "MPI"
-    else if (length(.find.package("rpvm", quiet = TRUE)) != 0)
+    else if (length(find.package("rpvm", quiet = TRUE)) != 0)
         type <- "PVM"
-    else if (length(.find.package("Rmpi", quiet = TRUE)) != 0)
+    else if (length(find.package("Rmpi", quiet = TRUE)) != 0)
         type <- "MPI"
-    else if (length(.find.package("nws", quiet = TRUE)) != 0)
+    else if (length(find.package("nws", quiet = TRUE)) != 0)
         type <- "NWS"
     else type <- "SOCK"
     setDefaultClusterOptions(type = type)
