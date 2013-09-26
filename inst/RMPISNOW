@@ -20,6 +20,13 @@ if test ! -z "${LAMRANK}" ; then
     else
 	exec R --slave > /dev/null 2>&1
     fi
+elif test ! -z "${MV2_COMM_WORLD_RANK}" ; then
+    # For MVAPICH2
+    if test "${MV2_COMM_WORLD_RANK}" -eq 0 ; then
+        exec R --no-save $*
+    else
+        exec R --slave > /dev/null 2>&1
+    fi
 elif test ! -z "${OMPI_MCA_ns_nds_vpid}" ; then
     # Similar approach for OpenMPI using the OMPI_MCA_ns_nds_vpid
     # variable.  This is for backward compatibility with pre-1.3
