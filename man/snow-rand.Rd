@@ -39,6 +39,7 @@ clusterSetupSPRNG (cl, seed = round(2^32 * runif(1)),
   \code{clusterSetupSPRNG} loads the \code{rsprng} package and initializes
   separate streams  on each node. For further details see the documentation
   of \code{init.sprng}.  The generator on the master is not affected.
+  NOTE: SPRNG is currently not supported.
 
   \code{clusterSetupRNGstream} loads the \code{rlecuyer} package,
   creates one stream per node and distributes the stream states

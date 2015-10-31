@@ -104,12 +104,12 @@ newNWSnode <- function(machine = "localhost", tmpWsName, rank, ws,
 
 # compute engine side
 makeNWSmaster <- function() {
-    if (! require(nws))
+    if (! requireNamespace("nws"))
         stop("the `nws' package is needed for NWS clusters.")
 
-    ws <- netWorkSpace(tmpWs <- Sys.getenv("TMPWS"),
-                       serverHost = Sys.getenv("MASTER"),
-                       port = as.integer(Sys.getenv("PORT")))
+    ws <- nws::netWorkSpace(tmpWs <- Sys.getenv("TMPWS"),
+                            serverHost = Sys.getenv("MASTER"),
+                            port = as.integer(Sys.getenv("PORT")))
 
     rank = as.integer(Sys.getenv("RANK"))
     structure(list(ws = ws,
@@ -130,12 +130,12 @@ closeNode.NWSnode <- function(node) {}
 sendData.NWSnode <- function(node, data) {
   if (node$outgoingVar == 'forDriver')
     data <- list(node = node$rank, data = data)
-  nwsStore(node$ws, node$outgoingVar, data)
+  nws::nwsStore(node$ws, node$outgoingVar, data)
 }
 
 recvData.NWSnode <- function(node) {
   if (node$incomingVar != 'forDriver') {
-    data <- nwsFetch(node$ws, node$incomingVar)
+    data <- nws::nwsFetch(node$ws, node$incomingVar)
   }
   else {
     # first check if we have already received a message for this node
@@ -147,7 +147,7 @@ recvData.NWSnode <- function(node) {
     else {
       repeat {
         # get the next message
-        d <- nwsFetch(node$ws, node$incomingVar)
+        d <- nws::nwsFetch(node$ws, node$incomingVar)
 
         # find out who this data is from
         rank <- d$node
@@ -189,13 +189,13 @@ recvOneData.NWScluster <- function(cl) {
       return(list(node = i, value = data))
     }
   }
-  d <- nwsFetch(cl[[1]]$ws, 'forDriver')
+  d <- nws::nwsFetch(cl[[1]]$ws, 'forDriver')
   # cat("debug: received a message from node", d$node, "\n")
   list(node = d$node, value = d$data)
 }
 
 makeNWScluster <- function(names=rep('localhost', 3), ..., options = defaultClusterOptions) {
-    if (! require(nws))
+    if (! requireNamespace("nws"))
         stop("the `nws' package is needed for NWS clusters.")
 
     # this allows makeNWScluster to be called like makeMPIcluster and
@@ -207,13 +207,13 @@ makeNWScluster <- function(names=rep('localhost', 3), ..., options = defaultClus
        list(port = 8765, scriptdir = path.package("snow")))
     options <- addClusterOptions(options, list(...))
 
-    wsServer <- nwsServer(serverHost = getClusterOption("master", options),
-                           port = getClusterOption("port", options))
+    wsServer <- nws::nwsServer(serverHost = getClusterOption("master", options),
+                               port = getClusterOption("port", options))
 
     state <- new.env()
 
-    tmpWsName = nwsMktempWs(wsServer, 'snow_nws_%04d')
-    ws = nwsOpenWs(wsServer, tmpWsName)
+    tmpWsName = nws::nwsMktempWs(wsServer, 'snow_nws_%04d')
+    ws = nws::nwsOpenWs(wsServer, tmpWsName)
     cl <- vector("list", length(names))
     for (i in seq(along=cl))
         cl[[i]] <- newNWSnode(names[[i]], tmpWsName = tmpWsName, rank = i,
@@ -225,6 +225,6 @@ makeNWScluster <- function(names=rep('localhost', 3), ..., options = defaultClus
 
 stopCluster.NWScluster <- function(cl) {
   NextMethod()
-  nwsDeleteWs(cl[[1]]$wsServer, nwsWsName(cl[[1]]$ws))
+  nws::nwsDeleteWs(cl[[1]]$wsServer, nws::nwsWsName(cl[[1]]$ws))
   close(cl[[1]]$wsServer)
 }

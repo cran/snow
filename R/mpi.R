@@ -11,18 +11,18 @@ makeMPImaster <- function(comm = 0)
               class = "MPInode")
 
 sendData.MPInode <- function(node, data)
-    mpi.send.Robj(data, node$rank, node$SENDTAG, node$comm)
+    Rmpi::mpi.send.Robj(data, node$rank, node$SENDTAG, node$comm)
 
 recvData.MPInode <- function(node)
-    mpi.recv.Robj(node$rank, node$RECVTAG, node$comm)
+    Rmpi::mpi.recv.Robj(node$rank, node$RECVTAG, node$comm)
 
 recvOneData.MPIcluster <- function(cl) {
-    rtag <- findRecvOneTag(cl, mpi.any.tag())
+    rtag <- findRecvOneTag(cl, Rmpi::mpi.any.tag())
     comm <- cl[[1]]$comm  # should all be the same
     status <- 0
-    mpi.probe(mpi.any.source(), rtag, comm, status)
-    srctag <- mpi.get.sourcetag(status)
-    data <- mpi.recv.Robj(srctag[1], srctag[2], comm)
+    Rmpi::mpi.probe(Rmpi::mpi.any.source(), rtag, comm, status)
+    srctag <- Rmpi::mpi.get.sourcetag(status)
+    data <- Rmpi::mpi.recv.Robj(srctag[1], srctag[2], comm)
     list(node = srctag[1], value = data)
 }
 
@@ -45,7 +45,7 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
     }
     else if (missing(count)) {
         # assume something like mpirun -np count+1 has been used to start R
-        count <- mpi.comm.size(0) - 1
+        count <- Rmpi::mpi.comm.size(0) - 1
         if (count <= 0)
             stop("no nodes available.")
         cl <- vector("list",count)
@@ -57,11 +57,11 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
     }
     else {
 	# use process spawning to create cluster
-        if (! require(Rmpi))
+        if (! requireNamespace("Rmpi"))
             stop("the `Rmpi' package is needed for MPI clusters.")
         comm <- 1
         intercomm <- 2
-        if (mpi.comm.size(comm) > 0)
+        if (Rmpi::mpi.comm.size(comm) > 0)
             stop(paste("a cluster already exists", comm))
         scriptdir <- getClusterOption("scriptdir", options)
         outfile <- getClusterOption("outfile", options)
@@ -100,11 +100,11 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
             }
             mpitask <- "/usr/bin/env"
         }
-        count <- mpi.comm.spawn(slave = mpitask, slavearg = args,
-                                nslaves = count, intercomm = intercomm)
-        if (mpi.intercomm.merge(intercomm, 0, comm)) {
-            mpi.comm.set.errhandler(comm)
-            mpi.comm.disconnect(intercomm)
+        count <- Rmpi::mpi.comm.spawn(slave = mpitask, slavearg = args,
+                                      nslaves = count, intercomm = intercomm)
+        if (Rmpi::mpi.intercomm.merge(intercomm, 0, comm)) {
+            Rmpi::mpi.comm.set.errhandler(comm)
+            Rmpi::mpi.comm.disconnect(intercomm)
         }
         else stop("Failed to merge the comm for master and slaves.")
         cl <- vector("list",count)
@@ -119,15 +119,15 @@ makeMPIcluster <- function(count, ..., options = defaultClusterOptions) {
 runMPIslave <- function() {
     comm <- 1
     intercomm <- 2
-    mpi.comm.get.parent(intercomm)
-    mpi.intercomm.merge(intercomm,1,comm)
-    mpi.comm.set.errhandler(comm)
-    mpi.comm.disconnect(intercomm)
+    Rmpi::mpi.comm.get.parent(intercomm)
+    Rmpi::mpi.intercomm.merge(intercomm,1,comm)
+    Rmpi::mpi.comm.set.errhandler(comm)
+    Rmpi::mpi.comm.disconnect(intercomm)
 
     slaveLoop(makeMPImaster(comm))
 
-    mpi.comm.disconnect(comm)
-    mpi.quit()
+    Rmpi::mpi.comm.disconnect(comm)
+    Rmpi::mpi.quit()
 }
 
 stopCluster.MPIcluster <- function(cl) {
@@ -138,10 +138,10 @@ stopCluster.MPIcluster <- function(cl) {
 stopCluster.spawnedMPIcluster <- function(cl) {
     comm <- 1
     NextMethod()
-    mpi.comm.disconnect(comm)
+    Rmpi::mpi.comm.disconnect(comm)
 }
 
-#**** figure out how to get mpi.quit called (similar issue for pvm?)
+#**** figure out how to get Rmpi::mpi.quit called (similar issue for pvm?)
 #**** fix things so stopCluster works in both versions.
 #**** need .Last to make sure cluster is shut down on exit of master
 #**** figure out why the slaves busy wait under mpirun

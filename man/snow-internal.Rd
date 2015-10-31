@@ -15,11 +15,11 @@
 \alias{closeNode.SOCKnode}
 \alias{sendData.SOCKnode}
 \alias{recvData.SOCKnode}
-\alias{newPVMnode}
-\alias{makePVMmaster}
-\alias{closeNode.PVMnode}
-\alias{sendData.PVMnode}
-\alias{recvData.PVMnode}
+%% \alias{newPVMnode}
+%% \alias{makePVMmaster}
+%% \alias{closeNode.PVMnode}
+%% \alias{sendData.PVMnode}
+%% \alias{recvData.PVMnode}
 \alias{newMPInode}
 \alias{makeMPImaster}
 \alias{closeNode.MPInode}
@@ -39,7 +39,7 @@
 \alias{stopNode}
 \alias{sendCall}
 \alias{recvResult}
-\alias{initSprngNode}
+%\alias{initSprngNode}
 \alias{initRNGstreamNode}
 \alias{splitIndices}
 \alias{splitList}
@@ -50,7 +50,7 @@
 \alias{findRecvOneTag}
 \alias{recvOneData}
 \alias{recvOneData.MPIcluster}
-\alias{recvOneData.PVMcluster}
+%% \alias{recvOneData.PVMcluster}
 \alias{recvOneData.SOCKcluster}
 \alias{recvOneData.NWScluster}
 \alias{recvOneResult}
@@ -80,10 +80,10 @@ makeSOCKmaster(master = Sys.getenv("MASTER"), port = Sys.getenv("PORT"))
 \method{sendData}{SOCKnode}(node, data)
 \method{recvData}{SOCKnode}(node)
 
-newPVMnode(where = "", options = defaultClusterOptions, rank)
-makePVMmaster()
-\method{sendData}{PVMnode}(node, data)
-\method{recvData}{PVMnode}(node)
+%% newPVMnode(where = "", options = defaultClusterOptions, rank)
+%% makePVMmaster()
+%% \method{sendData}{PVMnode}(node, data)
+%% \method{recvData}{PVMnode}(node)
 
 setMPIcluster(new)
 runMPIslave()
@@ -103,7 +103,7 @@ stopNode(n)
 sendCall(con, fun, args, return = TRUE, tag = NULL)
 recvResult(con)
 
-initSprngNode(streamno, nstream, seed, kind, para) 
+%initSprngNode(streamno, nstream, seed, kind, para) 
 initRNGstreamNode(stream)
 
 splitIndices(nx, ncl)
@@ -115,7 +115,7 @@ findRecvOneTag(cl, anytag)
 recvOneData(cl)
 recvOneResult(cl)
 \method{recvOneData}{MPIcluster}(cl)
-\method{recvOneData}{PVMcluster}(cl)
+%% \method{recvOneData}{PVMcluster}(cl)
 \method{recvOneData}{SOCKcluster}(cl)
 \method{recvOneData}{NWScluster}(cl)
 getClusterOption(name, options = defaultClusterOptions)

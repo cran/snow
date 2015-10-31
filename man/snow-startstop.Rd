@@ -2,7 +2,7 @@
 \title{Starting and Stopping SNOW Clusters}
 \alias{getMPIcluster}
 \alias{makeMPIcluster}
-\alias{makePVMcluster}
+%% \alias{makePVMcluster}
 \alias{makeNWScluster}
 \alias{makeSOCKcluster}
 \alias{makeCluster}
@@ -15,7 +15,7 @@ stopCluster(cl)
 setDefaultClusterOptions(...)
 
 makeSOCKcluster(names, ..., options = defaultClusterOptions)
-makePVMcluster(count, ..., options = defaultClusterOptions)
+%% makePVMcluster(count, ..., options = defaultClusterOptions)
 makeMPIcluster(count, ..., options = defaultClusterOptions)
 makeNWScluster(names, ..., options = defaultClusterOptions)
 getMPIcluster()
@@ -36,8 +36,10 @@ getMPIcluster()
 \details{
   \code{makeCluster} starts a cluster of the specified or default type
   and returns a reference to the cluster.  Supported cluster types are
-  \code{"SOCK"}, \code{"PVM"}, \code{"MPI"}, and \code{"NWS"}.  For
-  \code{"PVM"} and
+  \code{"SOCK"},
+  %% \code{"PVM"},
+  \code{"MPI"}, and \code{"NWS"}.  For
+  %% \code{"PVM"} and
   \code{"MPI"} clusters the \code{spec} argument should be an integer
   specifying the number of slave nodes to create.  For \code{"SOCK"} and
   \code{"NWS"}
@@ -65,9 +67,11 @@ getMPIcluster()
   most useful ones are \code{type} and \code{homogeneous}.  The
   default value of the \code{type} option is currently set to
   "MPI" if \pkg{Rmpi} is on the search path.  Otherwise it is set to
-  \code{"PVM"} if the \pkg{rpvm} package is available, to \code{"MPI"}
-  if \pkg{Rmpi} is available but \pkg{rpvm} is not, and to
-  \code{"SOCK"} if neither of these packages is found.
+  %% \code{"PVM"} if the \pkg{rpvm} package is available, to
+  \code{"MPI"}
+  if \pkg{Rmpi} is available,
+  %% but \pkg{rpvm} is not,
+  and to \code{"SOCK"} otherwise.
 
   The \code{homogeneous} option should be set to \code{FALSE} to
   specify that the startup procedure for inhomogeneous clusters is to
@@ -83,7 +87,7 @@ getMPIcluster()
   to \code{/dev/tty} will result in worker output being sent tothe
   terminal running the master process.
 
-  The functions \code{makeSOCKcluster}, \code{makePVMcluster},
+  The functions \code{makeSOCKcluster}, %% \code{makePVMcluster},
   \code{makeMPIcluster}, and \code{makeNWScluster} can be used to start
   a cluster of the corresponding type.
 
