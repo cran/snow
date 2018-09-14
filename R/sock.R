@@ -99,12 +99,26 @@ newSOCKnode <- function(machine = "localhost", ...,
 makeSOCKmaster <- function(master = Sys.getenv("MASTER"),
                            port = Sys.getenv("PORT")) {
     port <- as.integer(port)
-    ## maybe use `try' and sleep/retry if first time fails?
-    ## need timeout here because of the way internals work
     timeout <- getClusterOption("timeout")
-    old <- options(timeout = timeout);
-    on.exit(options(old))
-    con <- socketConnection(master, port = port, blocking=TRUE, open="a+b")
+
+    ## Retry scheme parameters (do these need to be customizable?)
+    retryDelay <- 0.1     # 0.1 second initial delay before retrying
+    retryScale <- 1.5     # 50% increase of delay at each retry
+    setup_timeout <- 120  # retry setup for 2 minutes before failing
+     
+    ## Retry multiple times in case the master is not yet ready
+    t0 <- Sys.time()
+    repeat {
+        con <- tryCatch({
+            socketConnection(master, port = port, blocking = TRUE,
+                             open = "a+b", timeout = timeout)
+        }, error = identity, warning = identity)
+        if (inherits(con, "connection")) break
+        if (Sys.time() - t0 > setup_timeout) break
+        Sys.sleep(retryDelay)
+        retryDelay <- retryScale * retryDelay
+    }
+    if (inherits(con, "condition")) stop(con)
     structure(list(con = con), class = "SOCKnode")
 }
 

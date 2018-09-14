@@ -26,11 +26,12 @@ checkCluster <- function(cl) {
         stop("not a valid cluster");
 }
 
-"[.cluster" <-function(cl,...) {
-    v<-unclass(cl)[...]
-    class(v)<-class(cl)
-    v
-}
+## Now defined in 'parallel'
+## "[.cluster" <-function(cl,...) {
+##     v<-unclass(cl)[...]
+##     class(v)<-class(cl)
+##     v
+## }
 
 
 #

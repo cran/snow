@@ -59,7 +59,6 @@
 \alias{checkForRemoteErrors}
 \alias{staticClusterApply}
 \alias{dynamicClusterApply}
-\alias{[.cluster}
 \alias{shQuoteIfNeeded}
 \usage{
 \method{stopCluster}{default}(cl)
@@ -124,7 +123,6 @@ checkCluster(cl)
 checkForRemoteErrors(val)
 staticClusterApply(cl, fun, n, argfun)
 dynamicClusterApply(cl, fun, n, argfun)
-\method{[}{cluster}(cl, ...)
 
 shQuoteIfNeeded(p)
 }

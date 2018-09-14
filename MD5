@@ -1,9 +1,9 @@
-a4005c0a209579bed707fca51139e45b *DESCRIPTION
-3e1d181f2a08e42144e3471230a8bf8a *NAMESPACE
+0bc83c4b667418f7883de228c96e9a78 *DESCRIPTION
+5e10e268dd2eae00a820eb9125c2b332 *NAMESPACE
 c41542f37ed36daa3fd72e4b2a0b841e *R/mpi.R
 803d622a417a6641cc9a3e766895b9c0 *R/nws.R
-dce3fab3a5c0e926fe1609ff7547fda7 *R/snow.R
-e74b59b2a64eb707da3f14f5470da7d3 *R/sock.R
+aad4a0dadc6036760b7f9785c0a3a836 *R/snow.R
+663d08fda3442a514fc2329cc46b7411 *R/sock.R
 59d3c83000da91b34a6fbbd9e98f168b *R/timing.R
 60a14d1023b235272455b04dd77151a8 *README
 14228e3f50d14bc0672d4badb6971975 *inst/RMPISNOW
@@ -20,7 +20,7 @@ e7f48f5490678c7177fd909af75862d2 *inst/RPVMnode.R
 28d30ce64558eef7cac822ff090ebcdf *inst/RunSnowWorker
 618bcd4abfbbc08f8c9df392de152497 *inst/RunSnowWorker.bat
 9ad1de9d79cde60991f772fdca78f9f8 *man/snow-cluster.Rd
-b3a4fac78cacc619eb469245d14e6078 *man/snow-internal.Rd
+10768c444b7471cdf0ef079a98fd113f *man/snow-internal.Rd
 6dcb34ff5c1151176b87e9e7a353e038 *man/snow-parallel.Rd
 9e71a275286e0481a0aa0434cc34997e *man/snow-rand.Rd
 c84f531e83a50c3d91874e8968f06301 *man/snow-startstop.Rd
