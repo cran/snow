@@ -8,13 +8,11 @@ the worker processes and collect and return the results on the master.
 This framework supports many forms of "embarrassingly parallel"
 computations.
 
-Snow can use one of four communications mechanisms: sockets, MPI, or
-NetWorkSpaces (NWS).  NWS support was provided by Steve Weston.  MPI
-clusters use package Rmpi; NWS clusters use package nws.  If MPI the
-MPI may need to be started externally. If NWS is used, the
-NetWorkSpaces server must be running.  SOCK clusters are the easiest
-approach for using snow on a single multi-core computer as they
-require no additional software.
+Snow can use one of two communications mechanisms: sockets or MPI. MPI
+clusters use package Rmpi.  If using MPI the MPI system may need to be
+started externally. SOCK clusters are the easiest approach for using
+snow on a single multi-core computer as they require no additional
+software.
 
 
 			       CAUTION
@@ -26,19 +24,16 @@ processes may remain running and need to be shut down manually.
 			     INSTALLATION
 
 MPI clusters require a suitable MPI implementation (e.g. LAM-MPI or
-Open MPI) and the Rmpi package.  NWS clusters require the
-NetWorkSpaces server (a Python application) on one network accessible
-machine, and the nws package on all hosts used for a cluster.  The
-rlecuyer package may also be useful to support parallel random number
-generation.  These supporting R packages and the snow package should
-be installed in the same library directory.  The snow package and
-supporting packages need to be available on all hosts that are to be
-used for a cluster.
+Open MPI) and the Rmpi package. The rlecuyer package may also be
+useful to support parallel random number generation.  These supporting
+R packages and the snow package should be installed in the same
+library directory.  The snow package and supporting packages need to
+be available on all hosts that are to be used for a cluster.
 
 No further configuration should be needed for a homogeneous network of
 workstations with a common architecture, operating system, and common
 file system layout.  If some hosts have different file system layouts,
-then SOCK and NWS clusters can use host specifications for the workers
+then SOCK clusters can use host specifications for the workers
 that specify where to find the snow package and the Rscript program to
 use.  Alternatively, the file RunSnowWorker should be placed in a
 directory on the PATH of each host to be used for worker processes,
@@ -60,14 +55,14 @@ define the environment variable R_SNOW_RSCRIPT_CMD to the path for
 Rscript, or you can edit edit the RunSnowWorker scripts to use a fully
 qualified path to the R shell script.
 
-For SOCK and NWS clusters the option manual = TRUE forces a manual
-startup mode in which the master prints the command to be run manually
-to start a worker process. Together with setting the outfile option
-this can be useful for debugging cluster startup.
+For SOCK clusters the option manual = TRUE forces a manual startup
+mode in which the master prints the command to be run manually to
+start a worker process. Together with setting the outfile option this
+can be useful for debugging cluster startup.
 
 To date, snow has been used successfully with master and workers
 running on combinations of several flavors of Unix-like operating
-systems, including Linux, HP-UX and Mac OS X using NWS, LAM-MPI, or
+systems, including Linux, HP-UX and Mac OS X using LAM-MPI, or
 sockets.  The socket version of snow has been run with a master on
 Linux or Windows Windows and workers on a combination of Windows,
 Linux, and Mac OS X; freeSSHd and Putty's plink were used for remote

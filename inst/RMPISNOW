@@ -6,7 +6,7 @@ if test ! -z "${R_SNOW_LIB}" ; then
 fi
 
 # find the library containing the snow package; should eventually use Rscript
-snowdir=`echo 'invisible(cat(tryCatch(dirname(find.package("snow")), error = function(e) ""),"\n",sep=""))' | R --slave`
+snowdir=`echo 'invisible(cat(tryCatch(dirname(find.package("snow")), error = function(e) ""),"\n",sep=""))' | R --no-echo`
 
 # for now this hijacks the R_PROFILE mechanism to start up the R
 # sessions and load snow and Rmpi into them
@@ -18,14 +18,14 @@ if test ! -z "${LAMRANK}" ; then
     if test "${LAMRANK}" -eq 0 ; then
 	exec R $*
     else
-	exec R --slave > /dev/null 2>&1
+	exec R --no-echo > /dev/null 2>&1
     fi
 elif test ! -z "${MV2_COMM_WORLD_RANK}" ; then
     # For MVAPICH2
     if test "${MV2_COMM_WORLD_RANK}" -eq 0 ; then
         exec R --no-save $*
     else
-        exec R --slave > /dev/null 2>&1
+        exec R --no-echo > /dev/null 2>&1
     fi
 elif test ! -z "${OMPI_MCA_ns_nds_vpid}" ; then
     # Similar approach for OpenMPI using the OMPI_MCA_ns_nds_vpid
@@ -35,7 +35,7 @@ elif test ! -z "${OMPI_MCA_ns_nds_vpid}" ; then
     if test "${OMPI_MCA_ns_nds_vpid}" -eq 0 ; then
 	exec R --no-save $*
     else
-	exec R --slave > /dev/null 2>&1
+	exec R --no-echo > /dev/null 2>&1
     fi
 elif test ! -z "${OMPI_COMM_WORLD_RANK}" ; then
     # Similar approach for OpenMPI using the OMPI_COMM_WORLD_RANK
@@ -45,7 +45,7 @@ elif test ! -z "${OMPI_COMM_WORLD_RANK}" ; then
     if test "${OMPI_COMM_WORLD_RANK}" -eq 0 ; then
 	exec R --no-save $*
     else
-	exec R --slave > /dev/null 2>&1
+	exec R --no-echo > /dev/null 2>&1
     fi
 else 
     # The fallback is to use the same arguments on master and workers,

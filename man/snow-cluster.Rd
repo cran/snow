@@ -33,7 +33,7 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
 }
 \details{
   These are the basic functions for computing on a cluster.  All
-  evaluations on the slave nodes are done using \code{tryCatch}.
+  evaluations on the worker nodes are done using \code{tryCatch}.
   Currently an error is signaled on the master if any one of the nodes
   produces an error.  More sophisticated approaches will be considered
   in the future.
@@ -83,7 +83,7 @@ clusterMap(cl, fun, ..., MoreArgs = NULL, RECYCLE = TRUE)
   performance.
 
   For more details see
-  \url{http://www.stat.uiowa.edu/~luke/R/cluster/cluster.html}.
+  \url{https://stat.uiowa.edu/~luke/R/cluster/cluster.html}.
 }
 \examples{
   \dontrun{

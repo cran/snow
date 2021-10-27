@@ -1,14 +1,14 @@
 \name{snow-internal}
 \title{Internal SNOW Objects}
-\alias{runMPIslave}
+\alias{runMPIworker}
 \alias{setMPIcluster}
 \alias{stopCluster.default}
 \alias{stopCluster.MPIcluster}
 \alias{stopCluster.spawnedMPIcluster}
-\alias{stopCluster.NWScluster}
+%% \alias{stopCluster.NWScluster}
 \alias{defaultClusterOptions}
 \alias{docall}
-\alias{slaveLoop}
+\alias{workLoop}
 \alias{sinkWorkerOutput}
 \alias{newSOCKnode}
 \alias{makeSOCKmaster}
@@ -25,11 +25,11 @@
 \alias{closeNode.MPInode}
 \alias{sendData.MPInode}
 \alias{recvData.MPInode}
-\alias{newNWSnode}
-\alias{makeNWSmaster}
-\alias{closeNode.NWSnode}
-\alias{sendData.NWSnode}
-\alias{recvData.NWSnode}
+%% \alias{newNWSnode}
+%% \alias{makeNWSmaster}
+%% \alias{closeNode.NWSnode}
+%% \alias{sendData.NWSnode}
+%% \alias{recvData.NWSnode}
 \alias{closeNode}
 \alias{closeNode.default}
 \alias{sendData}
@@ -52,7 +52,7 @@
 \alias{recvOneData.MPIcluster}
 %% \alias{recvOneData.PVMcluster}
 \alias{recvOneData.SOCKcluster}
-\alias{recvOneData.NWScluster}
+%% \alias{recvOneData.NWScluster}
 \alias{recvOneResult}
 \alias{getClusterOption}
 \alias{checkCluster}
@@ -64,13 +64,13 @@
 \method{stopCluster}{default}(cl)
 \method{stopCluster}{MPIcluster}(cl)
 \method{stopCluster}{spawnedMPIcluster}(cl)
-\method{stopCluster}{NWScluster}(cl)
+%% \method{stopCluster}{NWScluster}(cl)
 defaultClusterOptions
 addClusterOptions(options, new)
 initDefaultClusterOptions(libname)
 
 docall(fun, args)
-slaveLoop(master)
+workLoop(master)
 sinkWorkerOutput(outfile)
 
 newSOCKnode(machine = "localhost", ..., options = defaultClusterOptions, rank)
@@ -85,7 +85,7 @@ makeSOCKmaster(master = Sys.getenv("MASTER"), port = Sys.getenv("PORT"))
 %% \method{recvData}{PVMnode}(node)
 
 setMPIcluster(new)
-runMPIslave()
+runMPIworker()
 newMPInode(rank, comm)
 makeMPImaster(comm)
 \method{sendData}{MPInode}(node, data)
@@ -116,7 +116,7 @@ recvOneResult(cl)
 \method{recvOneData}{MPIcluster}(cl)
 %% \method{recvOneData}{PVMcluster}(cl)
 \method{recvOneData}{SOCKcluster}(cl)
-\method{recvOneData}{NWScluster}(cl)
+%% \method{recvOneData}{NWScluster}(cl)
 getClusterOption(name, options = defaultClusterOptions)
 
 checkCluster(cl)

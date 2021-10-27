@@ -35,10 +35,10 @@ checkCluster <- function(cl) {
 
 
 #
-# Slave Loop Function
+# Work Loop Function
 #
 
-slaveLoop <- function(master) {
+workLoop <- function(master) {
     repeat tryCatch({
         msg <- recvData(master)
 	cat(paste("Type:", msg$type, "\n"))
@@ -171,7 +171,7 @@ makeCluster <- function(spec, type = getClusterOption("type"), ...) {
         SOCK = makeSOCKcluster(spec, ...),
         # PVM = makePVMcluster(spec, ...),
         MPI = makeMPIcluster(spec, ...),
-        NWS = makeNWScluster(spec, ...),
+        # NWS = makeNWScluster(spec, ...),
         stop("unknown cluster type"))
 }
 
@@ -261,7 +261,7 @@ clusterExport <- local({
     env <- as.environment(1) ## .GlobalEnv
     gets <- function(n, v) { assign(n, v, envir = env); NULL }
     function(cl, list, envir = .GlobalEnv) {
-        ## do this with only one clusterCall--loop on slaves?
+        ## do this with only one clusterCall--loop on workers?
         for (name in list) {
             clusterCall(cl, gets, name, get(name, envir = envir))
         }
@@ -510,7 +510,7 @@ parMM <- function(cl, A, B)
 # adapted from sapply in the R sources
 parSapply <- function (cl, X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE)
 {
-    FUN <- match.fun(FUN) # should this be done on slave?
+    FUN <- match.fun(FUN) # should this be done on worker?
     answer <- parLapply(cl,as.list(X), FUN, ...)
     if (USE.NAMES && is.character(X) && is.null(names(answer)))
         names(answer) <- X
@@ -530,7 +530,7 @@ parSapply <- function (cl, X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE)
 # adapted from apply in the R sources
 parApply <- function(cl, X, MARGIN, FUN, ...)
 {
-    FUN <- match.fun(FUN) # should this be done on slave?
+    FUN <- match.fun(FUN) # should this be done on worker?
 
     ## Ensure that X is an array object
     d <- dim(X)
@@ -619,8 +619,8 @@ parApply <- function(cl, X, MARGIN, FUN, ...)
     ##     type <- "PVM"
     else if (length(find.package("Rmpi", quiet = TRUE)) != 0)
         type <- "MPI"
-    else if (length(find.package("nws", quiet = TRUE)) != 0)
-        type <- "NWS"
+    ## else if (length(find.package("nws", quiet = TRUE)) != 0)
+    ##     type <- "NWS"
     else type <- "SOCK"
     setDefaultClusterOptions(type = type)
 }

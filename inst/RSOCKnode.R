@@ -27,5 +27,5 @@ local({
 
     sinkWorkerOutput(outfile)
     cat("starting worker for", paste(master, port, sep = ":"), "\n")
-    slaveLoop(makeSOCKmaster(master, port))
+    workLoop(makeSOCKmaster(master, port))
 })

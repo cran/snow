@@ -3,7 +3,7 @@
 \alias{getMPIcluster}
 \alias{makeMPIcluster}
 %% \alias{makePVMcluster}
-\alias{makeNWScluster}
+%% \alias{makeNWScluster}
 \alias{makeSOCKcluster}
 \alias{makeCluster}
 \alias{stopCluster}
@@ -17,7 +17,7 @@ setDefaultClusterOptions(...)
 makeSOCKcluster(names, ..., options = defaultClusterOptions)
 %% makePVMcluster(count, ..., options = defaultClusterOptions)
 makeMPIcluster(count, ..., options = defaultClusterOptions)
-makeNWScluster(names, ..., options = defaultClusterOptions)
+%% makeNWScluster(names, ..., options = defaultClusterOptions)
 getMPIcluster()
 }
 \arguments{
@@ -38,29 +38,35 @@ getMPIcluster()
   and returns a reference to the cluster.  Supported cluster types are
   \code{"SOCK"},
   %% \code{"PVM"},
-  \code{"MPI"}, and \code{"NWS"}.  For
+  %% \code{"NWS"},
+  and \code{"MPI"}.  For
   %% \code{"PVM"} and
   \code{"MPI"} clusters the \code{spec} argument should be an integer
-  specifying the number of slave nodes to create.  For \code{"SOCK"} and
-  \code{"NWS"}
+  specifying the number of worker nodes to create.  For \code{"SOCK"}
+  %% and \code{"NWS"}
   clusters \code{spec} should be a character vector naming the hosts on
-  which slave nodes should be started; one node is started for each
-  element in the vector.  For \code{"SOCK"} and \code{"NWS"} clusters
-  \code{spec} can also be an integer specifying the
-  number of slaves nodes to create on the local machine.
+  which worker nodes should be started; one node is started for each
+  element in the vector.  For \code{"SOCK"}
+  %% and \code{"NWS"}
+  clusters \code{spec} can also be an integer specifying the
+  number of worker nodes to create on the local machine.
 
-  For \code{SOCK} and \code{NWS} clusters the \code{spec} can also be a
+  For \code{SOCK}
+  %% and \code{NWS}
+  clusters the \code{spec} can also be a
   list of machine specifications, each a list of named option values.
   Such a list must include a character value named \code{host} host
   specifying the name or address of the host to use.  Any other option
-  can be specified as well.  For \code{SOCK} and \code{NWS} clusters
+  can be specified as well.  For \code{SOCK}
+  %% and \code{NWS}
+  clusters
   this may be a more convenient alternative than inhomogeneous cluster
   startup procedure.  The options \code{rscript} and \code{snowlib} are
   often useful; see the examples below.
 
   \code{stopCluster} should be called to properly shut down the cluster
   before exiting R.  If it is not called it may be necessary to use
-  external means to ensure that all slave processes are shut down.
+  external means to ensure that all worker processes are shut down.
 
   \code{setDefaultClusterOptions} can be used to specify alternate
   values for default cluster options.  There are many options.  The
@@ -81,18 +87,19 @@ getMPIcluster()
   value.
 
   The option\code{outfile} can be used to specify the file to which
-  slave node output is to be directed.  The default is \code{/dev/null};
+  worker node output is to be directed.  The default is \code{/dev/null};
   during debugging of an installation it can be useful to set this to a
   proper file.  On some systems setting \code{outfile} to \code{""} or
   to \code{/dev/tty} will result in worker output being sent tothe
   terminal running the master process.
 
   The functions \code{makeSOCKcluster}, %% \code{makePVMcluster},
-  \code{makeMPIcluster}, and \code{makeNWScluster} can be used to start
+  %% \code{makeNWScluster},
+  and \code{makeMPIcluster} can be used to start
   a cluster of the corresponding type.
 
   In MPI configurations where process spawning is not available and
-  something like \code{mpirun} is used to start a master and a set of slaves
+  something like \code{mpirun} is used to start a master and a set of workers
   the corresponding cluster will have been pre-constructed and can be obtained
   with \code{getMPIcluster}.  It is also possible to obtain a reference
   to the running cluster using \code{makeCluster} or
@@ -101,13 +108,15 @@ getMPIcluster()
   cluster.  This interface is still experimental and
   subject to change.
 
-  For SOCK and NWS clusters the option \code{manual = TRUE} forces a
+  For SOCK
+  %% and NWS
+  clusters the option \code{manual = TRUE} forces a
   manual startup mode in which the master prints the command to be run
   manually to start a worker process. Together with setting the
   \code{outfile} option this can be useful for debugging cluster startup.
 
   For more details see
-  \url{http://www.stat.uiowa.edu/~luke/R/cluster/cluster.html}.
+  \url{https://stat.uiowa.edu/~luke/R/cluster/cluster.html}.
 }
 \examples{
   \dontrun{

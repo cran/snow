@@ -1,13 +1,13 @@
 library(Rmpi)
 library(snow)
 
-.MPIrun <- function() 
+assign(".MPIrun", function() 
 {
     if (mpi.comm.rank(0) > 0){
         sys.load.image(".RData",TRUE)
         .First.sys()
 	sink(file="/dev/null")
-        slaveLoop(makeMPImaster())
+        workLoop(makeMPImaster())
         mpi.quit()
     }
     else {
@@ -19,6 +19,6 @@ library(snow)
             mpi.quit()
         }
     }
-}
+}, .GlobalEnv)
 
 .MPIrun()

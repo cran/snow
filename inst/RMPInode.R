@@ -22,5 +22,5 @@ local({
 
     sinkWorkerOutput(outfile)
     cat("starting MPI worker\n")
-    runMPIslave()
+    runMPIworker()
 })

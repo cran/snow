@@ -46,7 +46,7 @@ clusterSetupSPRNG (cl, seed = round(2^32 * runif(1)),
   to the nodes.
 
   For more details see
-  \url{http://www.stat.uiowa.edu/~luke/R/cluster/cluster.html}.
+  \url{https://stat.uiowa.edu/~luke/R/cluster/cluster.html}.
 }
 \examples{
   \dontrun{

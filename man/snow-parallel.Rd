@@ -42,7 +42,7 @@ parMM(cl, A, B)
   it is intended as an illustration.
 
   For more details see
-  \url{http://www.stat.uiowa.edu/~luke/R/cluster/cluster.html}.
+  \url{https://stat.uiowa.edu/~luke/R/cluster/cluster.html}.
 }
 \examples{
   \dontrun{

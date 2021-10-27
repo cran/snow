@@ -9,5 +9,5 @@ library(snow)
 
 options(timeout=getClusterOption("timeout"))
 
-slaveLoop(makeSOCKmaster())
+workLoop(makeSOCKmaster())
 EOF
